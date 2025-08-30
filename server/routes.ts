@@ -80,6 +80,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
+  // Google Maps API key endpoint
+  app.get('/api/config/maps', (req, res) => {
+    res.json({ 
+      apiKey: process.env.GOOGLE_MAPS_API_KEY || '' 
+    });
+  });
+
   // Auth routes
   app.post('/api/auth/otp/request', async (req, res) => {
     try {
