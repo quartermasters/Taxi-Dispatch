@@ -94,38 +94,40 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
     
     const color = colors[status as keyof typeof colors] || colors.offline;
     
+    const svgContent = `
+      <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+        <!-- Vehicle shadow -->
+        <ellipse cx="20" cy="35" rx="16" ry="4" fill="rgba(0,0,0,0.2)"/>
+        
+        <!-- Vehicle body -->
+        <rect x="6" y="15" width="28" height="12" rx="6" fill="${color.primary}" stroke="${color.accent}" stroke-width="1"/>
+        
+        <!-- Vehicle cabin -->
+        <rect x="10" y="8" width="20" height="12" rx="4" fill="${color.secondary}" stroke="${color.accent}" stroke-width="1"/>
+        
+        <!-- Windshield -->
+        <rect x="12" y="10" width="16" height="6" rx="2" fill="rgba(255,255,255,0.3)"/>
+        
+        <!-- Wheels -->
+        <circle cx="12" cy="27" r="4" fill="#2d3748" stroke="${color.accent}" stroke-width="1"/>
+        <circle cx="28" cy="27" r="4" fill="#2d3748" stroke="${color.accent}" stroke-width="1"/>
+        <circle cx="12" cy="27" r="2" fill="#4a5568"/>
+        <circle cx="28" cy="27" r="2" fill="#4a5568"/>
+        
+        <!-- Status indicator -->
+        <circle cx="32" cy="8" r="4" fill="${color.primary}" stroke="${color.accent}" stroke-width="2"/>
+        <text x="32" y="12" text-anchor="middle" fill="${color.accent}" font-size="8" font-weight="bold">
+          ${status === 'idle' ? '✓' : status === 'busy' ? '●' : '✕'}
+        </text>
+        
+        <!-- Vehicle details -->
+        <rect x="16" y="18" width="8" height="2" fill="${color.accent}" opacity="0.8"/>
+        <rect x="14" y="21" width="12" height="1" fill="${color.accent}" opacity="0.6"/>
+      </svg>
+    `;
+    
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-          <!-- Vehicle shadow -->
-          <ellipse cx="20" cy="35" rx="16" ry="4" fill="rgba(0,0,0,0.2)"/>
-          
-          <!-- Vehicle body -->
-          <rect x="6" y="15" width="28" height="12" rx="6" fill="${color.primary}" stroke="${color.accent}" stroke-width="1"/>
-          
-          <!-- Vehicle cabin -->
-          <rect x="10" y="8" width="20" height="12" rx="4" fill="${color.secondary}" stroke="${color.accent}" stroke-width="1"/>
-          
-          <!-- Windshield -->
-          <rect x="12" y="10" width="16" height="6" rx="2" fill="rgba(255,255,255,0.3)"/>
-          
-          <!-- Wheels -->
-          <circle cx="12" cy="27" r="4" fill="#2d3748" stroke="${color.accent}" stroke-width="1"/>
-          <circle cx="28" cy="27" r="4" fill="#2d3748" stroke="${color.accent}" stroke-width="1"/>
-          <circle cx="12" cy="27" r="2" fill="#4a5568"/>
-          <circle cx="28" cy="27" r="2" fill="#4a5568"/>
-          
-          <!-- Status indicator -->
-          <circle cx="32" cy="8" r="4" fill="${color.primary}" stroke="${color.accent}" stroke-width="2"/>
-          <text x="32" y="12" text-anchor="middle" fill="${color.accent}" font-size="8" font-weight="bold">
-            ${status === 'idle' ? '✓' : status === 'busy' ? '●' : '✕'}
-          </text>
-          
-          <!-- Vehicle details -->
-          <rect x="16" y="18" width="8" height="2" fill="${color.accent}" opacity="0.8"/>
-          <rect x="14" y="21" width="12" height="1" fill="${color.accent}" opacity="0.6"/>
-        </svg>
-      `)`,
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgContent)}`,
       scaledSize: new (window as any).google.maps.Size(40, 40),
       anchor: new (window as any).google.maps.Point(20, 35)
     };
@@ -142,29 +144,31 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
     const color = colors[status as keyof typeof colors] || colors.offline;
     const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'D';
     
+    const svgContent = `
+      <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shadow -->
+        <circle cx="18" cy="32" r="14" fill="rgba(0,0,0,0.1)"/>
+        
+        <!-- Avatar background -->
+        <circle cx="18" cy="18" r="16" fill="${color.bg}" stroke="${color.border}" stroke-width="3"/>
+        
+        <!-- Driver silhouette -->
+        <circle cx="18" cy="12" r="6" fill="${color.border}"/>
+        <path d="M8 28 Q8 20 18 20 Q28 20 28 28 L8 28" fill="${color.border}"/>
+        
+        <!-- Status indicator -->
+        <circle cx="28" cy="8" r="6" fill="${color.border}" stroke="white" stroke-width="2"/>
+        <circle cx="28" cy="8" r="3" fill="white"/>
+        
+        <!-- Initials -->
+        <text x="18" y="22" text-anchor="middle" fill="white" font-size="8" font-weight="bold" font-family="Arial">
+          ${initials}
+        </text>
+      </svg>
+    `;
+    
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-        <svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-          <!-- Shadow -->
-          <circle cx="18" cy="32" r="14" fill="rgba(0,0,0,0.1)"/>
-          
-          <!-- Avatar background -->
-          <circle cx="18" cy="18" r="16" fill="${color.bg}" stroke="${color.border}" stroke-width="3"/>
-          
-          <!-- Driver silhouette -->
-          <circle cx="18" cy="12" r="6" fill="${color.border}"/>
-          <path d="M8 28 Q8 20 18 20 Q28 20 28 28 L8 28" fill="${color.border}"/>
-          
-          <!-- Status indicator -->
-          <circle cx="28" cy="8" r="6" fill="${color.border}" stroke="white" stroke-width="2"/>
-          <circle cx="28" cy="8" r="3" fill="white"/>
-          
-          <!-- Initials -->
-          <text x="18" y="22" text-anchor="middle" fill="white" font-size="8" font-weight="bold" font-family="Arial">
-            ${initials}
-          </text>
-        </svg>
-      `)`,
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgContent)}`,
       scaledSize: new (window as any).google.maps.Size(36, 36),
       anchor: new (window as any).google.maps.Point(18, 32)
     };
@@ -172,27 +176,29 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
 
   // Create pickup location icon
   const createPickupIcon = () => {
+    const svgContent = `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shadow -->
+        <ellipse cx="16" cy="28" rx="12" ry="3" fill="rgba(0,0,0,0.2)"/>
+        
+        <!-- Pin body -->
+        <path d="M16 4 C10 4 6 8 6 14 C6 20 16 28 16 28 S26 20 26 14 C26 8 22 4 16 4 Z" 
+              fill="#f59e0b" stroke="#ffffff" stroke-width="2"/>
+        
+        <!-- Pin center -->
+        <circle cx="16" cy="14" r="5" fill="#ffffff"/>
+        <circle cx="16" cy="14" r="3" fill="#f59e0b"/>
+        
+        <!-- Person icon -->
+        <g transform="translate(16,14) scale(0.7)">
+          <circle cx="0" cy="-2" r="2" fill="#ffffff"/>
+          <path d="M-3 4 Q-3 0 0 0 Q3 0 3 4 L-3 4" fill="#ffffff"/>
+        </g>
+      </svg>
+    `;
+    
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-        <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <!-- Shadow -->
-          <ellipse cx="16" cy="28" rx="12" ry="3" fill="rgba(0,0,0,0.2)"/>
-          
-          <!-- Pin body -->
-          <path d="M16 4 C10 4 6 8 6 14 C6 20 16 28 16 28 S26 20 26 14 C26 8 22 4 16 4 Z" 
-                fill="#f59e0b" stroke="#ffffff" stroke-width="2"/>
-          
-          <!-- Pin center -->
-          <circle cx="16" cy="14" r="5" fill="#ffffff"/>
-          <circle cx="16" cy="14" r="3" fill="#f59e0b"/>
-          
-          <!-- Person icon -->
-          <g transform="translate(16,14) scale(0.7)">
-            <circle cx="0" cy="-2" r="2" fill="#ffffff"/>
-            <path d="M-3 4 Q-3 0 0 0 Q3 0 3 4 L-3 4" fill="#ffffff"/>
-          </g>
-        </svg>
-      `)`,
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgContent)}`,
       scaledSize: new (window as any).google.maps.Size(32, 32),
       anchor: new (window as any).google.maps.Point(16, 28)
     };

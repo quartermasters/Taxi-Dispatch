@@ -93,7 +93,7 @@ export default function Vehicles() {
   });
 
   // Use mock data for testing - fallback to API data if available
-  const displayVehicles = vehicles?.length > 0 ? vehicles : mockVehicles;
+  const displayVehicles = (vehicles && Array.isArray(vehicles) && vehicles.length > 0) ? vehicles : mockVehicles;
 
   const form = useForm<z.infer<typeof vehicleFormSchema>>({
     resolver: zodResolver(vehicleFormSchema),
@@ -338,7 +338,7 @@ export default function Vehicles() {
                   filteredVehicles.map((vehicle: any) => {
                     // Check if this is mock data or API data
                     const assignedDriver = vehicle.assignedDriver || 
-                      drivers?.find((d: any) => d.drivers?.vehicleId === vehicle.id);
+                      (drivers && Array.isArray(drivers) ? drivers.find((d: any) => d.drivers?.vehicleId === vehicle.id) : null);
                     
                     return (
                       <TableRow key={vehicle.id} data-testid={`vehicle-row-${vehicle.id}`}>
