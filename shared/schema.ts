@@ -1,7 +1,7 @@
 // © 2025 Quartermasters FZC. All rights reserved.
 
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, integer, boolean, jsonb, pgEnum, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -17,6 +17,17 @@ export const eventTypeEnum = pgEnum('event_type', [
   'trip_started', 'trip_completed', 'trip_cancelled', 'payment_captured'
 ]);
 
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 // Core Tables
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -26,6 +37,9 @@ export const users = pgTable("users", {
   password: text("password"),
   googleId: text("google_id").unique(),
   picture: text("picture"),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
   role: userRoleEnum("role").notNull().default('passenger'),
   defaultPaymentMethodId: text("default_payment_method_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -179,6 +193,7 @@ export const insertOtpCodeSchema = createInsertSchema(otpCodes).omit({ id: true,
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = typeof users.$inferInsert;
 export type Driver = typeof drivers.$inferSelect;
 export type InsertDriver = z.infer<typeof insertDriverSchema>;
 export type Vehicle = typeof vehicles.$inferSelect;

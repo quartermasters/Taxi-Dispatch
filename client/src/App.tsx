@@ -6,6 +6,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth";
 import AdminLayout from "@/components/layout/admin-layout";
 import Dashboard from "@/pages/admin/dashboard";
 import Trips from "@/pages/admin/trips";
@@ -21,14 +22,22 @@ import { getAuthToken } from "@/lib/auth";
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const token = getAuthToken();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!token && location !== '/login') {
+    // Check both JWT token and Replit Auth
+    if (!token && !isAuthenticated && !isLoading && location !== '/login') {
       setLocation('/login');
     }
-  }, [token, location, setLocation]);
+  }, [token, isAuthenticated, isLoading, location, setLocation]);
 
-  if (!token && location !== '/login') {
+  // Show loading while checking Replit Auth
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  // If neither auth method is available, redirect to login
+  if (!token && !isAuthenticated && location !== '/login') {
     return null;
   }
 

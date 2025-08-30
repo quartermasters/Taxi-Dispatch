@@ -14,6 +14,7 @@ import { paymentsService } from "./services/payments";
 import { dispatchService } from "./services/dispatch";
 import { websocketService } from "./services/websocket";
 import { OAuth2Client } from "google-auth-library";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   otpRequestSchema, 
   otpVerifySchema, 
@@ -56,6 +57,9 @@ function requireRole(role: 'passenger' | 'driver' | 'admin') {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth
+  await setupAuth(app);
+
   // Initialize Google OAuth client
   const googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
@@ -151,6 +155,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Replit Auth user endpoint
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 

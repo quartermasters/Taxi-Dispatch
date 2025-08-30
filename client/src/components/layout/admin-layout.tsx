@@ -46,6 +46,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Link>
             );
           })}
+          <div className="mt-8 border-t border-border pt-4">
+            <button
+              onClick={() => window.location.href = '/api/logout'}
+              className="flex items-center px-6 py-3 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left"
+              data-testid="nav-logout"
+            >
+              <i className="fas fa-sign-out-alt mr-3"></i>
+              Logout (Replit)
+            </button>
+          </div>
         </nav>
       </div>
 

@@ -175,6 +175,15 @@ export default function Login() {
           {step === 'identifier' ? (
             <>
               <Button 
+                onClick={() => window.location.href = '/api/login'}
+                variant="outline" 
+                className="w-full mb-4"
+                data-testid="button-replit-login"
+              >
+                Continue with Replit
+              </Button>
+              
+              <Button 
                 onClick={handleGoogleLogin}
                 variant="outline" 
                 className="w-full mb-4"

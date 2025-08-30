@@ -2,7 +2,7 @@
 
 import { 
   users, drivers, vehicles, trips, tariffs, payments, eventLogs, zones, otpCodes,
-  type User, type InsertUser, type Driver, type InsertDriver, type Vehicle, type InsertVehicle,
+  type User, type InsertUser, type UpsertUser, type Driver, type InsertDriver, type Vehicle, type InsertVehicle,
   type Trip, type InsertTrip, type Tariff, type InsertTariff, type Payment, type InsertPayment,
   type EventLog, type InsertEventLog, type Zone, type InsertZone, type OtpCode, type InsertOtpCode
 } from "@shared/schema";
@@ -17,6 +17,7 @@ export interface IStorage {
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<InsertUser>): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Driver methods
   getDriver(id: string): Promise<Driver | undefined>;
@@ -106,6 +107,21 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.update(users)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
     return user;
   }
