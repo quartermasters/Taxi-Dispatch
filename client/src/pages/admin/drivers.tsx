@@ -108,17 +108,26 @@ export default function Drivers() {
       <header className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-foreground" data-testid="page-title">Driver Management</h2>
-            <p className="text-sm text-muted-foreground">Monitor and manage driver fleet</p>
+            <h2 className="text-2xl font-semibold text-foreground flex items-center" data-testid="page-title">
+              <i className="fas fa-users-cog mr-3 text-primary"></i>
+              Driver Management
+            </h2>
+            <p className="text-sm text-muted-foreground flex items-center">
+              <i className="fas fa-chart-network mr-2"></i>
+              Monitor and manage driver fleet
+            </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Input
-              placeholder="Search drivers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
-              data-testid="input-search-drivers"
-            />
+            <div className="relative">
+              <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
+              <Input
+                placeholder="Search drivers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 pl-10"
+                data-testid="input-search-drivers"
+              />
+            </div>
           </div>
         </div>
       </header>

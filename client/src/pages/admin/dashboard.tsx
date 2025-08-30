@@ -124,11 +124,14 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <i className="fas fa-route text-primary"></i>
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-sm">
+                  <i className="fas fa-route text-white text-lg"></i>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Active Trips</p>
+                  <p className="text-sm font-medium text-muted-foreground flex items-center">
+                    <i className="fas fa-chart-line mr-2 text-blue-500"></i>
+                    Active Trips
+                  </p>
                   <p className="text-2xl font-semibold text-foreground" data-testid="stat-active-trips">
                     {stats.activeTrips}
                   </p>
@@ -140,11 +143,14 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-accent/10 rounded-lg">
-                  <i className="fas fa-users text-accent"></i>
+                <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-sm">
+                  <i className="fas fa-user-check text-white text-lg"></i>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Online Drivers</p>
+                  <p className="text-sm font-medium text-muted-foreground flex items-center">
+                    <i className="fas fa-users mr-2 text-green-500"></i>
+                    Online Drivers
+                  </p>
                   <p className="text-2xl font-semibold text-foreground" data-testid="stat-online-drivers">
                     {stats.onlineDrivers}
                   </p>
@@ -156,11 +162,14 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-secondary/10 rounded-lg">
-                  <i className="fas fa-dollar-sign text-secondary"></i>
+                <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg shadow-sm">
+                  <i className="fas fa-coins text-white text-lg"></i>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Today's Revenue</p>
+                  <p className="text-sm font-medium text-muted-foreground flex items-center">
+                    <i className="fas fa-chart-pie mr-2 text-emerald-500"></i>
+                    Today's Revenue
+                  </p>
                   <p className="text-2xl font-semibold text-foreground" data-testid="stat-revenue">
                     ${(stats.revenue / 100).toFixed(0)}
                   </p>
@@ -172,11 +181,14 @@ export default function Dashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <i className="fas fa-clock text-purple-600"></i>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-sm">
+                  <i className="fas fa-stopwatch text-white text-lg"></i>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">Avg. ETA</p>
+                  <p className="text-sm font-medium text-muted-foreground flex items-center">
+                    <i className="fas fa-clock mr-2 text-purple-500"></i>
+                    Avg. ETA
+                  </p>
                   <p className="text-2xl font-semibold text-foreground" data-testid="stat-avg-eta">
                     {stats.avgEta}m
                   </p>
@@ -196,36 +208,39 @@ export default function Dashboard() {
                 <div className="flex items-center space-x-2">
                   <button 
                     onClick={() => setActiveFilter('drivers')}
-                    className={`px-3 py-1 text-xs rounded-md ${
+                    className={`px-3 py-1 text-xs rounded-md flex items-center space-x-1 ${
                       activeFilter === 'drivers' 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`} 
                     data-testid="filter-drivers"
                   >
-                    Drivers ({displayDrivers.filter(d => d.status !== 'offline').length})
+                    <i className="fas fa-user-tie"></i>
+                    <span>Drivers ({displayDrivers.filter(d => d.status !== 'offline').length})</span>
                   </button>
                   <button 
                     onClick={() => setActiveFilter('trips')}
-                    className={`px-3 py-1 text-xs rounded-md ${
+                    className={`px-3 py-1 text-xs rounded-md flex items-center space-x-1 ${
                       activeFilter === 'trips' 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`} 
                     data-testid="filter-trips"
                   >
-                    Trips ({displayTrips.length})
+                    <i className="fas fa-route"></i>
+                    <span>Trips ({displayTrips.length})</span>
                   </button>
                   <button 
                     onClick={() => setActiveFilter('zones')}
-                    className={`px-3 py-1 text-xs rounded-md ${
+                    className={`px-3 py-1 text-xs rounded-md flex items-center space-x-1 ${
                       activeFilter === 'zones' 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`} 
                     data-testid="filter-zones"
                   >
-                    Zones ({displayZones.length})
+                    <i className="fas fa-map-marked-alt"></i>
+                    <span>Zones ({displayZones.length})</span>
                   </button>
                 </div>
               </div>

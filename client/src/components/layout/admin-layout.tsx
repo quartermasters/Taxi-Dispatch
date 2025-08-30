@@ -10,13 +10,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
 
   const navigation = [
-    { name: 'Live Board', href: '/', icon: 'fas fa-map-marked-alt' },
+    { name: 'Live Board', href: '/', icon: 'fas fa-tv' },
     { name: 'Trips', href: '/trips', icon: 'fas fa-route' },
-    { name: 'Drivers', href: '/drivers', icon: 'fas fa-users' },
-    { name: 'Vehicles', href: '/vehicles', icon: 'fas fa-car' },
+    { name: 'Drivers', href: '/drivers', icon: 'fas fa-id-card' },
+    { name: 'Vehicles', href: '/vehicles', icon: 'fas fa-car-side' },
     { name: 'Payments', href: '/payments', icon: 'fas fa-credit-card' },
-    { name: 'Reports', href: '/reports', icon: 'fas fa-chart-bar' },
-    { name: 'Settings', href: '/settings', icon: 'fas fa-cog' },
+    { name: 'Reports', href: '/reports', icon: 'fas fa-chart-line' },
+    { name: 'Settings', href: '/settings', icon: 'fas fa-sliders-h' },
   ];
 
   return (

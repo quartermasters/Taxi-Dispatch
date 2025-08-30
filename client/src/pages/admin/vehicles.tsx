@@ -164,21 +164,30 @@ export default function Vehicles() {
       <header className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-foreground" data-testid="page-title">Vehicle Management</h2>
-            <p className="text-sm text-muted-foreground">Manage fleet vehicles and assignments</p>
+            <h2 className="text-2xl font-semibold text-foreground flex items-center" data-testid="page-title">
+              <i className="fas fa-car-alt mr-3 text-primary"></i>
+              Vehicle Management
+            </h2>
+            <p className="text-sm text-muted-foreground flex items-center">
+              <i className="fas fa-tools mr-2"></i>
+              Manage fleet vehicles and assignments
+            </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Input
-              placeholder="Search vehicles..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
-              data-testid="input-search-vehicles"
-            />
+            <div className="relative">
+              <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
+              <Input
+                placeholder="Search vehicles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64 pl-10"
+                data-testid="input-search-vehicles"
+              />
+            </div>
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
               <DialogTrigger asChild>
-                <Button data-testid="button-add-vehicle">
-                  <i className="fas fa-plus mr-2"></i>
+                <Button data-testid="button-add-vehicle" className="flex items-center">
+                  <i className="fas fa-plus-circle mr-2"></i>
                   Add Vehicle
                 </Button>
               </DialogTrigger>
