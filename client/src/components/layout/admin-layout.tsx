@@ -22,12 +22,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-card border-r border-border">
+      <div className="w-64 bg-card border-r border-border flex flex-col">
         <div className="p-6 border-b border-border">
           <h1 className="text-xl font-semibold text-foreground">Taxi Dispatch</h1>
           <p className="text-sm text-muted-foreground">Admin Console</p>
         </div>
-        <nav className="mt-6">
+        <nav className="mt-6 flex-1">
           {navigation.map((item) => {
             const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
             return (
@@ -46,17 +46,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Link>
             );
           })}
-          <div className="mt-8 border-t border-border pt-4">
-            <button
-              onClick={() => window.location.href = '/api/logout'}
-              className="flex items-center px-6 py-3 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left"
-              data-testid="nav-logout"
-            >
-              <i className="fas fa-sign-out-alt mr-3"></i>
-              Logout (Replit)
-            </button>
-          </div>
         </nav>
+        
+        {/* Bottom logout section */}
+        <div className="border-t border-border">
+          <button
+            onClick={() => window.location.href = '/api/logout'}
+            className="flex items-center px-6 py-4 text-sm font-medium text-muted-foreground hover:text-red-600 hover:bg-red-50 w-full text-left transition-colors"
+            data-testid="nav-logout"
+          >
+            <i className="fas fa-power-off mr-3"></i>
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
