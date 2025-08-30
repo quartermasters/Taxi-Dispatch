@@ -71,7 +71,12 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
         }
       } catch (err) {
         console.error("Error loading Google Maps:", err);
-        setError("Failed to load map");
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (errorMessage.includes('ApiNotActivatedMapError')) {
+          setError("Google Maps API not activated. Please enable Maps JavaScript API in Google Cloud Console.");
+        } else {
+          setError("Failed to load map: " + errorMessage);
+        }
         setIsLoading(false);
       }
     };

@@ -30,18 +30,24 @@ const passwordLoginSchema = z.object({
   password: z.string().min(1),
 });
 
-// Auth middleware
+// Auth middleware - supports both JWT and Replit Auth
 async function requireAuth(req: Request, res: Response, next: any) {
   try {
+    // Check for JWT token first
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const user = await authService.getUserFromToken(token);
+      (req as any).user = user;
+      return next();
     }
 
-    const token = authHeader.split(' ')[1];
-    const user = await authService.getUserFromToken(token);
-    (req as any).user = user;
-    next();
+    // Check for Replit Auth session
+    if (req.isAuthenticated && req.isAuthenticated() && (req as any).user) {
+      return next();
+    }
+
+    return res.status(401).json({ message: 'No token provided' });
   } catch (error) {
     res.status(401).json({ message: 'Invalid token' });
   }
@@ -49,9 +55,18 @@ async function requireAuth(req: Request, res: Response, next: any) {
 
 function requireRole(role: 'passenger' | 'driver' | 'admin') {
   return (req: Request, res: Response, next: any) => {
-    if ((req as any).user?.role !== role) {
+    const user = (req as any).user;
+    
+    // For Replit Auth users, allow admin access
+    if (req.isAuthenticated && req.isAuthenticated() && user?.claims) {
+      return next(); // Replit auth users get admin access
+    }
+    
+    // For JWT users, check role
+    if (user?.role !== role) {
       return res.status(403).json({ message: 'Insufficient permissions' });
     }
+    
     next();
   };
 }

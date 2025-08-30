@@ -7,18 +7,20 @@ import { LiveMap } from "@/components/ui/live-map";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { getAuthToken } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { wsManager } from "@/lib/websocket";
 
 export default function Dashboard() {
   const token = getAuthToken();
+  const { isAuthenticated } = useAuth();
 
   // Connect to WebSocket for real-time updates
   useEffect(() => {
-    if (token) {
+    if (token || isAuthenticated) {
       wsManager.connect();
     }
     return () => wsManager.disconnect();
-  }, [token]);
+  }, [token, isAuthenticated]);
 
   const { data: activeTrips, refetch: refetchTrips } = useQuery({
     queryKey: ['/api/admin/trips'],
