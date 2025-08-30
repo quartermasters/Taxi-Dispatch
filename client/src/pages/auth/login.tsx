@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Separator } from "@/components/ui/separator";
 import { useRequestOtp, useVerifyOtp } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 const identifierSchema = z.object({
   identifier: z.string().min(1, "Phone number or email is required"),
@@ -21,9 +22,14 @@ const otpSchema = z.object({
   code: z.string().length(6, "OTP code must be 6 digits"),
 });
 
+const passwordSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export default function Login() {
   const [, setLocation] = useLocation();
-  const [step, setStep] = useState<'identifier' | 'otp'>('identifier');
+  const [step, setStep] = useState<'identifier' | 'otp' | 'password'>('identifier');
   const [identifier, setIdentifier] = useState('');
   const { toast } = useToast();
 
@@ -48,6 +54,29 @@ export default function Login() {
 
   const requestOtpMutation = useRequestOtp();
   const verifyOtpMutation = useVerifyOtp();
+  
+  const passwordLoginMutation = useMutation({
+    mutationFn: async (data: { email: string; password: string }) => {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      localStorage.setItem('auth_token', data.accessToken);
+      toast({
+        title: "Login Successful",
+        description: "Welcome to Taxi Dispatch Admin Console.",
+      });
+      setLocation('/');
+    },
+  });
 
   const identifierForm = useForm<z.infer<typeof identifierSchema>>({
     resolver: zodResolver(identifierSchema),
@@ -60,6 +89,14 @@ export default function Login() {
     resolver: zodResolver(otpSchema),
     defaultValues: {
       code: '',
+    },
+  });
+
+  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      email: '',
+      password: '',
     },
   });
 
@@ -103,6 +140,18 @@ export default function Login() {
     }
   };
 
+  const onSubmitPassword = async (values: z.infer<typeof passwordSchema>) => {
+    try {
+      await passwordLoginMutation.mutateAsync(values);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleGoogleLogin = () => {
     window.location.href = '/api/auth/google';
   };
@@ -115,6 +164,8 @@ export default function Login() {
           <CardDescription>
             {step === 'identifier' 
               ? 'Sign in to access the admin console'
+              : step === 'password'
+              ? 'Enter your admin credentials'
               : 'Enter the verification code sent to your device'
             }
           </CardDescription>
@@ -135,6 +186,22 @@ export default function Login() {
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Continue with Google
+              </Button>
+              
+              <div className="relative mb-4">
+                <Separator />
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                  OR
+                </span>
+              </div>
+              
+              <Button 
+                onClick={() => setStep('password')}
+                variant="outline" 
+                className="w-full mb-4"
+                data-testid="button-admin-login"
+              >
+                Admin Login
               </Button>
               
               <div className="relative mb-4">

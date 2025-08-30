@@ -1,6 +1,7 @@
 // © 2025 Quartermasters FZC. All rights reserved.
 
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import { storage } from '../storage';
 import { type User } from '@shared/schema';
 
@@ -19,6 +20,11 @@ export interface GoogleLoginData {
   email: string;
   name: string;
   picture?: string;
+}
+
+export interface PasswordLoginData {
+  email: string;
+  password: string;
 }
 
 export class AuthService {
@@ -135,6 +141,54 @@ export class AuthService {
     const refreshToken = this.generateRefreshToken(user);
 
     return { accessToken, refreshToken, user };
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 12);
+  }
+
+  async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+    return bcrypt.compare(password, hashedPassword);
+  }
+
+  async loginWithPassword(data: PasswordLoginData): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    const user = await storage.getUserByEmail(data.email);
+    if (!user || !user.password) {
+      throw new Error('Invalid email or password');
+    }
+
+    const isValidPassword = await this.verifyPassword(data.password, user.password);
+    if (!isValidPassword) {
+      throw new Error('Invalid email or password');
+    }
+
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
+
+    return { accessToken, refreshToken, user };
+  }
+
+  async createSuperAdmin(): Promise<User> {
+    const email = 'hello@quartermasters.me';
+    const password = 'Aatikagilani2011@';
+    
+    // Check if superadmin already exists
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const hashedPassword = await this.hashPassword(password);
+    
+    const user = await storage.createUser({
+      name: 'Super Admin',
+      email: email,
+      phone: '',
+      password: hashedPassword,
+      role: 'admin',
+    });
+
+    return user;
   }
 }
 

@@ -22,6 +22,12 @@ import {
   driverStatusUpdateSchema,
   driverEventSchema
 } from "@shared/schema";
+import { z } from "zod";
+
+const passwordLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
 
 // Auth middleware
 async function requireAuth(req: Request, res: Response, next: any) {
@@ -56,6 +62,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     process.env.GOOGLE_CLIENT_SECRET,
     `${process.env.REPL_URL || 'http://localhost:5000'}/api/auth/google/callback`
   );
+
+  // Create superadmin user on startup
+  try {
+    await authService.createSuperAdmin();
+    console.log('✅ Superadmin user ready: hello@quartermasters.me');
+  } catch (error) {
+    console.log('⚠️  Superadmin setup:', error);
+  }
 
   // Health check
   app.get('/api/health', (req, res) => {
@@ -125,6 +139,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.redirect(`/?token=${result.accessToken}`);
     } catch (error: any) {
       console.error('Google OAuth error:', error);
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Password login route
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = passwordLoginSchema.parse(req.body);
+      const result = await authService.loginWithPassword({ email, password });
+      res.json(result);
+    } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   });
