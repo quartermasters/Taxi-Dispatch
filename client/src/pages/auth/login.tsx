@@ -98,6 +98,7 @@ export default function Login() {
       email: '',
       password: '',
     },
+    mode: 'onChange',
   });
 
   const onSubmitIdentifier = async (values: z.infer<typeof identifierSchema>) => {
@@ -196,7 +197,10 @@ export default function Login() {
               </div>
               
               <Button 
-                onClick={() => setStep('password')}
+                onClick={() => {
+                  setStep('password');
+                  passwordForm.reset();
+                }}
                 variant="outline" 
                 className="w-full mb-4"
                 data-testid="button-admin-login"
@@ -334,7 +338,10 @@ export default function Login() {
                   type="button" 
                   variant="ghost" 
                   className="w-full" 
-                  onClick={() => setStep('identifier')}
+                  onClick={() => {
+                    setStep('identifier');
+                    passwordForm.reset();
+                  }}
                   data-testid="button-back-password"
                 >
                   Back
