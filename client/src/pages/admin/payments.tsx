@@ -30,8 +30,7 @@ export default function Payments() {
   const { toast } = useToast();
 
   const { data: payments, isLoading } = useQuery({
-    queryKey: ['/api/admin/payments', dateRange.startDate, dateRange.endDate],
-    queryKey: ['/api/admin/reports'],
+    queryKey: ['/api/admin/reports', dateRange.startDate, dateRange.endDate],
     queryFn: async () => {
       const response = await apiRequest('GET', `/api/admin/reports?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`);
       return response.json();

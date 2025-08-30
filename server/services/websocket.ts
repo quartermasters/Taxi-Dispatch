@@ -3,6 +3,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { type Server } from 'http';
 import { authService } from './auth';
+import { storage } from '../storage';
 
 interface WebSocketClient {
   ws: WebSocket;
@@ -18,7 +19,7 @@ export class WebSocketService {
     this.wss = new WebSocketServer({ 
       server, 
       path: '/ws',
-      verifyClient: async (info) => {
+      verifyClient: async (info: any) => {
         try {
           const url = new URL(info.req.url!, `http://${info.req.headers.host}`);
           const token = url.searchParams.get('token');
@@ -159,20 +160,20 @@ export class WebSocketService {
   }
 
   private broadcastToRole(role: 'passenger' | 'driver' | 'admin', message: any): void {
-    for (const client of this.clients.values()) {
+    this.clients.forEach((client) => {
       if (client.role === role && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(JSON.stringify(message));
       }
-    }
+    });
   }
 
   getConnectedClients(): { total: number; passengers: number; drivers: number; admins: number } {
     const stats = { total: 0, passengers: 0, drivers: 0, admins: 0 };
     
-    for (const client of this.clients.values()) {
+    this.clients.forEach((client) => {
       stats.total++;
       stats[`${client.role}s` as keyof typeof stats]++;
-    }
+    });
     
     return stats;
   }

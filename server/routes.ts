@@ -4,6 +4,9 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users, drivers, vehicles } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { authService } from "./services/auth";
 import { tripsService } from "./services/trips";
 import { pricingService } from "./services/pricing";
@@ -225,12 +228,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/drivers', requireAuth, requireRole('admin'), async (req, res) => {
     try {
       // Get all drivers with their user info
-      const drivers = await db.select()
+      const driversData = await db.select()
         .from(drivers)
         .leftJoin(users, eq(drivers.userId, users.id))
         .leftJoin(vehicles, eq(drivers.vehicleId, vehicles.id));
       
-      res.json(drivers);
+      res.json(driversData);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }

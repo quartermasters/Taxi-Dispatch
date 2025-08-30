@@ -1,6 +1,7 @@
 // © 2025 Quartermasters FZC. All rights reserved.
 
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,24 +16,44 @@ import Reports from "@/pages/admin/reports";
 import Settings from "@/pages/admin/settings";
 import Login from "@/pages/auth/login";
 import NotFound from "@/pages/not-found";
+import { getAuthToken } from "@/lib/auth";
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const [location, setLocation] = useLocation();
+  const token = getAuthToken();
+
+  useEffect(() => {
+    if (!token && location !== '/login') {
+      setLocation('/login');
+    }
+  }, [token, location, setLocation]);
+
+  if (!token && location !== '/login') {
+    return null;
+  }
+
+  return <>{children}</>;
+}
 
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/" nest>
-        <AdminLayout>
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/trips" component={Trips} />
-            <Route path="/drivers" component={Drivers} />
-            <Route path="/vehicles" component={Vehicles} />
-            <Route path="/payments" component={Payments} />
-            <Route path="/reports" component={Reports} />
-            <Route path="/settings" component={Settings} />
-            <Route component={NotFound} />
-          </Switch>
-        </AdminLayout>
+        <AuthGuard>
+          <AdminLayout>
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/trips" component={Trips} />
+              <Route path="/drivers" component={Drivers} />
+              <Route path="/vehicles" component={Vehicles} />
+              <Route path="/payments" component={Payments} />
+              <Route path="/reports" component={Reports} />
+              <Route path="/settings" component={Settings} />
+              <Route component={NotFound} />
+            </Switch>
+          </AdminLayout>
+        </AuthGuard>
       </Route>
       <Route component={NotFound} />
     </Switch>

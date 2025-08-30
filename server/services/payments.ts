@@ -4,12 +4,18 @@ import Stripe from 'stripe';
 import { storage } from '../storage';
 import { eventLogService } from './trips';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
-});
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-08-27.basil',
+    })
+  : null;
 
 export class PaymentsService {
   async createPaymentIntent(tripId: string, amount: number): Promise<string> {
+    if (!stripe) {
+      throw new Error('Payment processing not configured');
+    }
+
     const trip = await storage.getTrip(tripId);
     if (!trip) {
       throw new Error('Trip not found');
@@ -38,6 +44,10 @@ export class PaymentsService {
   }
 
   async capturePayment(tripId: string): Promise<void> {
+    if (!stripe) {
+      throw new Error('Payment processing not configured');
+    }
+
     const payment = await storage.getPaymentByTrip(tripId);
     if (!payment || payment.status !== 'pending') {
       throw new Error('Payment not found or already processed');
@@ -63,6 +73,10 @@ export class PaymentsService {
   }
 
   async refundPayment(tripId: string, amount?: number): Promise<void> {
+    if (!stripe) {
+      throw new Error('Payment processing not configured');
+    }
+
     const payment = await storage.getPaymentByTrip(tripId);
     if (!payment || payment.status !== 'succeeded') {
       throw new Error('Payment not found or cannot be refunded');
@@ -87,11 +101,15 @@ export class PaymentsService {
         refundId: refund.id,
       });
     } catch (error) {
-      throw new Error(`Refund failed: ${error.message}`);
+      throw new Error(`Refund failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   async voidPayment(tripId: string): Promise<void> {
+    if (!stripe) {
+      return;
+    }
+
     const payment = await storage.getPaymentByTrip(tripId);
     if (!payment || payment.status !== 'pending') {
       return;

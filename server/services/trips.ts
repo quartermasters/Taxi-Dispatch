@@ -4,7 +4,6 @@ import { storage } from '../storage';
 import { type Trip, type InsertTrip, type CreateTripRequest } from '@shared/schema';
 import { pricingService } from './pricing';
 import { dispatchService } from './dispatch';
-import { eventLogService } from './events';
 
 export class TripsService {
   async createTrip(request: CreateTripRequest, passengerId: string): Promise<Trip> {
