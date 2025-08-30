@@ -1,0 +1,386 @@
+{
+"title": "Taxi Dispatch — MVP Build Plan (Quartermasters FZC)",
+"objective": "Implement a production-ready MVP for a taxi dispatch system with Passenger app, Driver app, Admin web, and NestJS backend services. Prioritise reliability, clear UX, minimal latency, and clean code. Deliver a runnable monorepo with seed data and automated tests.",
+"constraints": {
+"style": "No emojis. Professional UI/UX. Token-efficient prompts. Avoid unnecessary commentary.",
+"scope": "MVP only. No AI route optimisation, no corporate portal, no marketplace, no NEMT.",
+"security": "JWT-based auth, HTTPS-only assumption, Stripe tokenisation only, no raw card data.",
+"data\_retention": "Trip events aggregated; raw GPS retained 30 days in dev; configurable in prod.",
+"license\_header": "© 2025 Quartermasters FZC. All rights reserved."
+},
+"tech\_stack": {
+"frontend": {
+"admin": "React + Vite + TypeScript",
+"mobile": "Expo (React Native)"
+},
+"backend": "NestJS (Node 20) for API Gateway, Realtime Gateway, and domain services",
+"datastore": "PostgreSQL (Prisma ORM)",
+"cache\_queue": "Redis (geo, presence, queues via BullMQ)",
+"realtime": "socket.io",
+"payments": "Stripe",
+"maps": "Google Maps or Mapbox (configurable via env)",
+"messaging": "FCM/APNs for push, Twilio for SMS (toggle)"
+},
+"env": {
+"files": \[
+{
+"path": ".env.example",
+"content": \[
+"NODE\_ENV=development",
+"DATABASE\_URL=postgresql://td\:td\@localhost:5432/taxi",
+"REDIS\_URL=redis\://localhost:6379",
+"JWT\_SECRET=change\_me\_32\_chars",
+"STRIPE\_KEY=sk\_test\_xxx",
+"STRIPE\_WEBHOOK\_SECRET=whsec\_xxx",
+"MAPS\_PROVIDER=google",
+"MAPS\_API\_KEY=xxx",
+"PUSH\_FIREBASE\_JSON\_PATH=./firebase-service-account.json",
+"TWILIO\_ACCOUNT\_SID=optional",
+"TWILIO\_AUTH\_TOKEN=optional",
+"TWILIO\_FROM\_NUMBER=optional"
+]
+}
+]
+},
+"repo\_structure": {
+"root": \[
+"package.json (workspaces)",
+"pnpm-workspace.yaml",
+"turbo.json",
+"docker-compose.yml (postgres, redis, localstack for s3-like exports)",
+".env.example",
+"README.md"
+],
+"packages": {
+"config": "zod-based env loader",
+"logger": "pino setup",
+"types": "shared DTOs and zod schemas",
+"db": "Prisma schema + client"
+},
+"apps": {
+"api-gateway": "REST + Auth (JWT) + input validation",
+"realtime-gateway": "socket.io gateway",
+"admin-web": "React/Vite admin console",
+"passenger-mobile": "Expo app for passengers",
+"driver-mobile": "Expo app for drivers"
+},
+"services": {
+"trips": "Trip lifecycle, booking, status",
+"dispatch": "Assignment engine, retry logic, zones",
+"pricing": "Quote and ETA stubs; surge multiplier",
+"fleet": "Drivers, vehicles, shifts",
+"payments": "Stripe intents, capture, refunds",
+"notifications": "Push/SMS adapters",
+"reports": "Event ingestion, CSV exports",
+"integrations": "Future webhooks; minimal MVP stub"
+}
+},
+"data\_model": {
+"entities": \[
+"Passenger(id, name, email, phone, defaultPaymentMethodId)",
+"Driver(id, name, phone, status, lastLat, lastLng, vehicleId, idleSince)",
+"Vehicle(id, plate, type, capacity)",
+"Trip(id, passengerId, driverId?, status, pickup{lat,lng,address?}, dropoff{lat,lng,address?}, scheduledAt?, fareQuote, surge?, distanceKm?, durationMin?, createdAt, updatedAt)",
+"Tariff(id, vehicleType, base, perKm, perMin, surgeMultiplier?, zoneId?)",
+"Payment(id, tripId, provider='stripe', intentId, status, amount, refundAmount?)",
+"EventLog(id, tripId, type, payload, createdAt)"
+]
+},
+"api\_contracts": {
+"auth": \[
+{ "POST /auth/otp/request": "{ phone|email } → 200" },
+{ "POST /auth/otp/verify": "{ code, phone|email } → { accessToken, refreshToken, role }" }
+],
+"trips": \[
+{ "POST /trips/quote": "{ pickup, dropoff, vehicleType? } → { etaMin, fareCents, surge? }" },
+{ "POST /trips": "{ passengerId, pickup, dropoff, vehicleType?, paymentMethodId? } → { id, fareQuote }" },
+{ "GET /trips/\:id": "Trip detail + status timeline" },
+{ "POST /trips/\:id/cancel": "{ reason? } → { status }" }
+],
+"drivers": \[
+{ "POST /drivers/login": "{ phone|email, code } → { token }" },
+{ "POST /drivers/status": "{ online: boolean, lat, lng }" },
+{ "POST /drivers/accept": "{ tripId } → { status }" },
+{ "POST /drivers/event": "{ tripId, type: ARRIVED|START|END } → { status }" }
+],
+"admin": \[
+{ "GET /admin/trips": "list + filters" },
+{ "GET /admin/drivers": "list + filters" },
+{ "POST /admin/refunds": "{ paymentId|tripId, amount? } → { refundId }" },
+{ "GET /admin/reports": "CSV by date range" },
+{ "POST /admin/tariffs": "CRUD tariffs" },
+{ "POST /admin/zones": "CRUD simple polygon zones or radius rules" }
+],
+"ws\_events": \[
+"job.offer { tripId, pickup, dropoff, distanceKm, estMins } → to candidate drivers",
+"job.accepted { tripId, driverId } → to passenger + ops",
+"status.update { tripId, status } → passenger + ops",
+"location.update { driverId, lat, lng } → ops; passenger for assigned trip"
+]
+},
+"ui\_specs": {
+"admin": {
+"Live Board": "Map with drivers and active trips; filters by status/zone",
+"Trips": "Table with id, passenger, driver, status, createdAt; detail side panel",
+"Drivers": "Table with status, last ping, trips today; online toggle",
+"Settings": "Tariffs, surge windows, cancellation grace, zones",
+"Payments": "Charges, refunds; view by date; search by trip or passenger"
+},
+"passenger": {
+"Home": "Search pickup/dropoff, map, quote card",
+"Confirm": "Fare, ETA, card selector, confirm button, cancel policy note",
+"Track": "Driver avatar/vehicle, ETA, live map, share trip, call masked",
+"History": "Last 10 trips with receipts"
+},
+"driver": {
+"Status": "Online/Offline, surge indicator if active",
+"Offer": "Pickup distance, ETA, accept/decline with countdown",
+"Trip": "Arrived/Start/End buttons, deep link to navigation",
+"Earnings": "Today and last 7 days summary"
+},
+"ux\_rules": \[
+"Minimal clicks to book and to accept a job",
+"Readable typography, high contrast, accessible defaults",
+"Clear error messages and retry actions",
+"Loading states for network calls; skeletons where relevant"
+]
+},
+"dispatch\_logic": {
+"candidate\_selection": "Drivers with status=IDLE within radius R (default 5 km) of pickup using Haversine distance.",
+"ordering": "Sort by distance asc, idleSince asc.",
+"offer\_window\_seconds": 12,
+"max\_attempts": 5,
+"retry": "If timeout/decline, offer to next; after max, alert operator.",
+"prebook": "Release job N minutes before pickup (default 15).",
+"zones": "Optional simple zones for surge and radius overrides."
+},
+"payments\_flow": {
+"confirm": "Create PaymentIntent with amount=fareQuote, requires\_capture",
+"complete": "Capture on trip end, record Payment, email receipt",
+"cancel": "If within grace window, void PaymentIntent; else charge fee if configured",
+"refund": "Manual via Admin, partial/full, recorded on Payment.refundAmount"
+},
+"notifications": {
+"passenger": \[
+"booking\_confirmed",
+"driver\_assigned",
+"driver\_arriving",
+"trip\_completed"
+],
+"driver": \[
+"job\_offer",
+"near\_pickup\_reminder"
+],
+"channels": "Push via FCM/APNs, optional SMS via Twilio for booking\_confirmed/driver\_assigned/arriving"
+},
+"observability": {
+"logs": "Pino structured logs with requestId and tripId",
+"metrics": \[
+"job\_offer\_latency\_ms",
+"dispatch\_queue\_depth",
+"socket\_connections",
+"pricing\_latency\_ms",
+"payment\_capture\_failures"
+],
+"health": "Each service exposes /healthz"
+},
+"seed\_data": {
+"drivers": 15,
+"vehicles": "Mix of STANDARD/XL",
+"tariffs": "Base, perKm, perMin for STANDARD and XL",
+"passengers": 30,
+"zones": "Optional single city polygon"
+},
+"build\_steps": \[
+{
+"step": 1,
+"name": "Bootstrap Monorepo",
+"actions": \[
+"Init workspaces, turbo, shared tsconfig",
+"Add docker-compose for Postgres/Redis",
+"Create packages: config, logger, types, db (Prisma)"
+],
+"acceptance": \[
+"pnpm -w db\:migrate creates schema",
+"pnpm dev runs without errors"
+]
+},
+{
+"step": 2,
+"name": "API Gateway + Auth",
+"actions": \[
+"NestJS app with JWT auth guards and OTP endpoints (mock OTP in dev)",
+"Global validation pipe and error filter",
+"Rate limiting middleware for auth routes"
+],
+"acceptance": \[
+"POST /auth/otp/request and /auth/otp/verify return tokens",
+"Protected routes reject without Bearer token"
+]
+},
+{
+"step": 3,
+"name": "Trips & Pricing",
+"actions": \[
+"Implement /trips/quote using simple distance + time model with optional surge",
+"Implement /trips create + Trip state machine",
+"Store pricing inputs and result on Trip"
+],
+"acceptance": \[
+"Quote response ≤600ms in dev",
+"Trip created with REQUESTED status"
+]
+},
+{
+"step": 4,
+"name": "Dispatch Service",
+"actions": \[
+"BullMQ worker consuming dispatch.jobs",
+"Nearest-driver selection with Haversine and idleSince",
+"Retry logic with offer window and max attempts"
+],
+"acceptance": \[
+"Driver assigned within 10s p95 when idle driver within 3km",
+"Escalation after max attempts"
+]
+},
+{
+"step": 5,
+"name": "Realtime Gateway",
+"actions": \[
+"socket.io namespace for drivers and passengers",
+"Rooms by trip and by zone",
+"Emit job.offer, job.accepted, status.update, location.update"
+],
+"acceptance": \[
+"Offer reaches subscribed driver within 1s p95",
+"Passenger sees live status updates"
+]
+},
+{
+"step": 6,
+"name": "Driver App",
+"actions": \[
+"Expo app with Online/Offline, location heartbeat, offer modal with countdown",
+"Trip flow screens: Enroute, Arrived, Start, End",
+"Deep link to native maps for navigation"
+],
+"acceptance": \[
+"Driver receives offer and can accept within window",
+"Status changes reflected in backend and passenger app"
+]
+},
+{
+"step": 7,
+"name": "Passenger App",
+"actions": \[
+"Search pickup/dropoff, map pin, quote view",
+"Confirm with saved card, live tracking screen",
+"Trip history + receipts"
+],
+"acceptance": \[
+"User books within 3 taps after search",
+"Live driver location and ETA visible"
+]
+},
+{
+"step": 8,
+"name": "Payments",
+"actions": \[
+"Stripe intents (requires\_capture) on confirm",
+"Capture on trip completion; void on graceful cancel",
+"Admin refunds endpoint + UI"
+],
+"acceptance": \[
+"Successful capture on completion",
+"Refund appears in list and CSV"
+]
+},
+{
+"step": 9,
+"name": "Admin Web",
+"actions": \[
+"Live board map, trips table, drivers table",
+"CRUD tariffs, surge windows, cancellation rules",
+"Payments view and refund action"
+],
+"acceptance": \[
+"Operator can reassign or cancel a trip",
+"CSV export works for date range"
+]
+},
+{
+"step": 10,
+"name": "Notifications",
+"actions": \[
+"Push service for key passenger/driver events",
+"Optional Twilio SMS fallback, toggle in settings"
+],
+"acceptance": \[
+"Passenger gets assigned and arriving pushes",
+"Driver gets job.offer push"
+]
+},
+{
+"step": 11,
+"name": "QA & Hardening",
+"actions": \[
+"Load test: 100 concurrent bookings without backlog",
+"Chaos test: kill dispatch worker; jobs resume after restart",
+"E2E happy path tests (booking→assignment→completion→receipt)"
+],
+"acceptance": \[
+"All E2E pass in CI",
+"p95 latencies within targets"
+]
+}
+],
+"tests": {
+"unit": \[
+"Pricing math and surge application",
+"Dispatch candidate selection and ordering"
+],
+"integration": \[
+"Trips create → enqueue dispatch",
+"Driver accept → state transition"
+],
+"e2e": \[
+"Passenger books → driver assigned → trip completes → payment captured → receipt generated"
+],
+"tooling": "Vitest/Jest for TS, Playwright for admin UI smoke, Detox optional later for RN"
+},
+"acceptance\_criteria": \[
+"Booking to driver assignment under 10s when eligible driver within 3km",
+"Socket event latency under 1s p95",
+"Payment captured within 30s p95 after trip end",
+"Admin can issue refund and see it in export",
+"System handles 100 concurrent bookings without dispatch backlog"
+],
+"commands": {
+"bootstrap": \[
+"pnpm i",
+"docker compose up -d",
+"pnpm -w db\:migrate",
+"pnpm dev"
+]
+},
+"lint\_format": {
+"ts": "ESLint + Prettier with strict rules; no implicit any; no floating promises",
+"commits": "Conventional commits (feat:, fix:, chore:)"
+},
+"deliverables": \[
+"Monorepo with runnable services and apps",
+"Seed script and demo credentials",
+"Postman/Insomnia collection for APIs",
+"README with setup and run instructions",
+"CI workflow for lint, build, tests"
+],
+"non\_goals": \[
+"Marketplace integrations",
+"Corporate portal and invoicing automation",
+"AI optimisation",
+"HIPAA/NEMT workflows",
+"In-app chat"
+],
+"legal": "All generated code must include file header: © 2025 Quartermasters FZC. All rights reserved."
+}
