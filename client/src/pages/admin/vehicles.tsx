@@ -16,6 +16,60 @@ import { Badge } from "@/components/ui/badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Mock vehicle data for testing - matching the drivers
+const mockVehicles = [
+  { 
+    id: 'v1', 
+    plate: 'DUB-A123', 
+    type: 'standard', 
+    model: 'Toyota Camry', 
+    color: 'White', 
+    capacity: 4,
+    assignedDriverId: '1',
+    assignedDriver: { name: 'Ahmed Hassan', phone: '+971501234567', status: 'idle' }
+  },
+  { 
+    id: 'v2', 
+    plate: 'DUB-B456', 
+    type: 'executive', 
+    model: 'Honda Accord', 
+    color: 'Black', 
+    capacity: 4,
+    assignedDriverId: '2',
+    assignedDriver: { name: 'Mohammed Ali', phone: '+971501234568', status: 'busy' }
+  },
+  { 
+    id: 'v3', 
+    plate: 'DUB-C789', 
+    type: 'standard', 
+    model: 'Nissan Altima', 
+    color: 'Silver', 
+    capacity: 4,
+    assignedDriverId: '3',
+    assignedDriver: { name: 'Omar Saeed', phone: '+971501234569', status: 'idle' }
+  },
+  { 
+    id: 'v4', 
+    plate: 'DUB-D012', 
+    type: 'xl', 
+    model: 'Hyundai Elantra', 
+    color: 'Blue', 
+    capacity: 6,
+    assignedDriverId: '4',
+    assignedDriver: { name: 'Khalid Ahmad', phone: '+971501234570', status: 'busy' }
+  },
+  { 
+    id: 'v5', 
+    plate: 'DUB-E345', 
+    type: 'standard', 
+    model: 'Kia Optima', 
+    color: 'Red', 
+    capacity: 4,
+    assignedDriverId: '5',
+    assignedDriver: { name: 'Rashid Nasser', phone: '+971501234571', status: 'offline' }
+  },
+];
+
 const vehicleFormSchema = z.object({
   plate: z.string().min(1, "License plate is required"),
   type: z.enum(['standard', 'xl', 'executive']),
@@ -32,6 +86,13 @@ export default function Vehicles() {
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['/api/admin/vehicles'],
   });
+
+  const { data: drivers } = useQuery({
+    queryKey: ['/api/admin/drivers'],
+  });
+
+  // Use mock data for testing - fallback to API data if available
+  const displayVehicles = vehicles?.length > 0 ? vehicles : mockVehicles;
 
   const form = useForm<z.infer<typeof vehicleFormSchema>>({
     resolver: zodResolver(vehicleFormSchema),
@@ -67,12 +128,12 @@ export default function Vehicles() {
     },
   });
 
-  const filteredVehicles = vehicles?.filter((vehicle: any) => 
+  const filteredVehicles = displayVehicles.filter((vehicle: any) => 
     !searchTerm || 
     vehicle.plate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.color?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   const onSubmit = (values: z.infer<typeof vehicleFormSchema>) => {
     createVehicleMutation.mutate(values);
@@ -265,7 +326,9 @@ export default function Vehicles() {
                   </TableRow>
                 ) : (
                   filteredVehicles.map((vehicle: any) => {
-                    const assignedDriver = drivers?.find((d: any) => d.drivers?.vehicleId === vehicle.id);
+                    // Check if this is mock data or API data
+                    const assignedDriver = vehicle.assignedDriver || 
+                      drivers?.find((d: any) => d.drivers?.vehicleId === vehicle.id);
                     
                     return (
                       <TableRow key={vehicle.id} data-testid={`vehicle-row-${vehicle.id}`}>
@@ -295,8 +358,12 @@ export default function Vehicles() {
                         <TableCell data-testid={`vehicle-driver-${vehicle.id}`}>
                           {assignedDriver ? (
                             <div className="text-sm">
-                              <p className="text-foreground">{assignedDriver.users?.name}</p>
-                              <p className="text-muted-foreground">{assignedDriver.users?.phone}</p>
+                              <p className="text-foreground">
+                                {assignedDriver.name || assignedDriver.users?.name}
+                              </p>
+                              <p className="text-muted-foreground">
+                                {assignedDriver.phone || assignedDriver.users?.phone}
+                              </p>
                             </div>
                           ) : (
                             <span className="text-muted-foreground">Unassigned</span>
@@ -304,7 +371,7 @@ export default function Vehicles() {
                         </TableCell>
                         <TableCell>
                           <StatusBadge 
-                            status={assignedDriver?.drivers?.status || 'offline'} 
+                            status={assignedDriver?.status || assignedDriver?.drivers?.status || 'offline'} 
                             type="driver"
                             data-testid={`vehicle-status-${vehicle.id}`}
                           />
