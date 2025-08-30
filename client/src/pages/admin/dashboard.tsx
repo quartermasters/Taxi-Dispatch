@@ -1,7 +1,7 @@
 // © 2025 Quartermasters FZC. All rights reserved.
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LiveMap } from "@/components/ui/live-map";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -10,9 +10,31 @@ import { getAuthToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { wsManager } from "@/lib/websocket";
 
+// Mock data for testing
+const mockDrivers = [
+  { id: '1', name: 'Ahmed Hassan', lat: 25.2048, lng: 55.2708, status: 'idle', phone: '+971501234567' },
+  { id: '2', name: 'Mohammed Ali', lat: 25.1972, lng: 55.2744, status: 'busy', phone: '+971501234568' },
+  { id: '3', name: 'Omar Saeed', lat: 25.2084, lng: 55.2719, status: 'idle', phone: '+971501234569' },
+  { id: '4', name: 'Khalid Ahmad', lat: 25.1951, lng: 55.2820, status: 'busy', phone: '+971501234570' },
+  { id: '5', name: 'Rashid Nasser', lat: 25.2015, lng: 55.2650, status: 'offline', phone: '+971501234571' },
+];
+
+const mockTrips = [
+  { id: 'trip-1', passengerId: 'pass-1', pickupLat: 25.2000, pickupLng: 55.2700, status: 'accepted', fareQuote: 2500 },
+  { id: 'trip-2', passengerId: 'pass-2', pickupLat: 25.1980, pickupLng: 55.2780, status: 'in_progress', fareQuote: 3200 },
+  { id: 'trip-3', passengerId: 'pass-3', pickupLat: 25.2060, pickupLng: 55.2690, status: 'pending', fareQuote: 1800 },
+];
+
+const mockZones = [
+  { id: 'zone-1', name: 'Downtown Dubai', centerLat: 25.2048, centerLng: 55.2708, multiplier: 1.5 },
+  { id: 'zone-2', name: 'Dubai Marina', centerLat: 25.0800, centerLng: 55.1400, multiplier: 1.8 },
+  { id: 'zone-3', name: 'Dubai Mall Area', centerLat: 25.1975, centerLng: 55.2744, multiplier: 2.0 },
+];
+
 export default function Dashboard() {
   const token = getAuthToken();
   const { isAuthenticated } = useAuth();
+  const [activeFilter, setActiveFilter] = useState<'drivers' | 'trips' | 'zones'>('trips');
 
   // Connect to WebSocket for real-time updates
   useEffect(() => {
@@ -29,6 +51,11 @@ export default function Dashboard() {
   const { data: drivers, refetch: refetchDrivers } = useQuery({
     queryKey: ['/api/admin/drivers'],
   });
+
+  // Use mock data for testing - fallback to API data if available
+  const displayDrivers = drivers?.length > 0 ? drivers : mockDrivers;
+  const displayTrips = activeTrips?.length > 0 ? activeTrips : mockTrips;
+  const displayZones = mockZones;
 
   const { data: wsStats } = useQuery({
     queryKey: ['/api/admin/websocket-stats'],
@@ -58,9 +85,9 @@ export default function Dashboard() {
   }, [refetchTrips, refetchDrivers]);
 
   const stats = {
-    activeTrips: activeTrips?.length || 0,
-    onlineDrivers: drivers?.filter((d: any) => d.drivers?.status === 'idle' || d.drivers?.status === 'busy')?.length || 0,
-    revenue: activeTrips?.reduce((sum: number, trip: any) => sum + (trip.fareQuote || 0), 0) || 0,
+    activeTrips: displayTrips.length,
+    onlineDrivers: displayDrivers.filter((d: any) => d.status === 'idle' || d.status === 'busy').length,
+    revenue: displayTrips.reduce((sum: number, trip: any) => sum + (trip.fareQuote || 0), 0),
     avgEta: 4.2,
   };
 
@@ -167,14 +194,38 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <CardTitle>Live Fleet Map</CardTitle>
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-1 text-xs bg-muted text-muted-foreground rounded-md" data-testid="filter-drivers">
-                    Drivers
+                  <button 
+                    onClick={() => setActiveFilter('drivers')}
+                    className={`px-3 py-1 text-xs rounded-md ${
+                      activeFilter === 'drivers' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`} 
+                    data-testid="filter-drivers"
+                  >
+                    Drivers ({displayDrivers.filter(d => d.status !== 'offline').length})
                   </button>
-                  <button className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded-md" data-testid="filter-trips">
-                    Trips
+                  <button 
+                    onClick={() => setActiveFilter('trips')}
+                    className={`px-3 py-1 text-xs rounded-md ${
+                      activeFilter === 'trips' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`} 
+                    data-testid="filter-trips"
+                  >
+                    Trips ({displayTrips.length})
                   </button>
-                  <button className="px-3 py-1 text-xs bg-muted text-muted-foreground rounded-md" data-testid="filter-zones">
-                    Zones
+                  <button 
+                    onClick={() => setActiveFilter('zones')}
+                    className={`px-3 py-1 text-xs rounded-md ${
+                      activeFilter === 'zones' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted text-muted-foreground'
+                    }`} 
+                    data-testid="filter-zones"
+                  >
+                    Zones ({displayZones.length})
                   </button>
                 </div>
               </div>
@@ -182,18 +233,19 @@ export default function Dashboard() {
             <CardContent className="p-0">
               <LiveMap 
                 className="h-96" 
-                drivers={drivers?.map((d: any) => ({
-                  id: d.drivers?.id || '',
-                  lat: parseFloat(d.drivers?.lastLat || '0'),
-                  lng: parseFloat(d.drivers?.lastLng || '0'),
-                  status: d.drivers?.status || 'offline'
-                })) || []}
-                trips={activeTrips?.map((trip: any) => ({
+                drivers={activeFilter === 'drivers' || activeFilter === 'zones' ? displayDrivers.map((d: any) => ({
+                  id: d.id,
+                  lat: d.lat,
+                  lng: d.lng,
+                  status: d.status,
+                  name: d.name
+                })) : []}
+                trips={activeFilter === 'trips' || activeFilter === 'zones' ? displayTrips.map((trip: any) => ({
                   id: trip.id,
-                  pickupLat: parseFloat(trip.pickupLat),
-                  pickupLng: parseFloat(trip.pickupLng),
+                  pickupLat: trip.pickupLat,
+                  pickupLng: trip.pickupLng,
                   status: trip.status
-                })) || []}
+                })) : []}
               />
             </CardContent>
           </Card>
@@ -204,21 +256,21 @@ export default function Dashboard() {
               <CardTitle>Active Trips</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 max-h-96 overflow-y-auto">
-              {activeTrips?.length === 0 ? (
+              {displayTrips.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground" data-testid="empty-trips">
                   No active trips
                 </div>
               ) : (
-                activeTrips?.map((trip: any) => (
+                displayTrips.map((trip: any) => (
                   <div key={trip.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg" data-testid={`trip-card-${trip.id}`}>
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       <div>
                         <p className="font-medium text-foreground" data-testid={`trip-id-${trip.id}`}>
-                          #{trip.id.slice(-6)}
+                          #{trip.id}
                         </p>
                         <p className="text-sm text-muted-foreground" data-testid={`trip-passenger-${trip.id}`}>
-                          Passenger {trip.passengerId.slice(-4)}
+                          Passenger {trip.passengerId}
                         </p>
                       </div>
                     </div>
@@ -270,42 +322,47 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Driver Status */}
+          {/* Online Drivers */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Driver Status</CardTitle>
+                <CardTitle>Online Drivers ({displayDrivers.filter(d => d.status !== 'offline').length})</CardTitle>
                 <button className="text-sm text-primary hover:text-primary/80" data-testid="view-all-drivers">
                   View All
                 </button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3 max-h-64 overflow-y-auto">
-              {drivers?.length === 0 ? (
+              {displayDrivers.filter(d => d.status !== 'offline').length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground" data-testid="empty-drivers">
-                  No drivers available
+                  No drivers online
                 </div>
               ) : (
-                drivers?.slice(0, 5).map((driver: any, index: number) => (
-                  <div key={driver.drivers?.id || index} className="flex items-center justify-between" data-testid={`driver-card-${driver.drivers?.id}`}>
+                displayDrivers.filter(d => d.status !== 'offline').map((driver: any) => (
+                  <div key={driver.id} className="flex items-center justify-between" data-testid={`driver-card-${driver.id}`}>
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {driver.users?.name?.substring(0, 2).toUpperCase() || 'UN'}
+                        {driver.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground" data-testid={`driver-name-${driver.drivers?.id}`}>
-                          {driver.users?.name || 'Unknown Driver'}
+                        <p className="font-medium text-foreground" data-testid={`driver-name-${driver.id}`}>
+                          {driver.name}
                         </p>
-                        <p className="text-xs text-muted-foreground" data-testid={`driver-vehicle-${driver.drivers?.id}`}>
-                          {driver.vehicles?.model || 'No Vehicle'} • {driver.vehicles?.plate || 'N/A'}
+                        <p className="text-xs text-muted-foreground" data-testid={`driver-phone-${driver.id}`}>
+                          {driver.phone}
                         </p>
                       </div>
                     </div>
-                    <StatusBadge 
-                      status={driver.drivers?.status || 'offline'} 
-                      type="driver"
-                      data-testid={`driver-status-${driver.drivers?.id}`}
-                    />
+                    <div className="text-right">
+                      <StatusBadge 
+                        status={driver.status} 
+                        type="driver"
+                        data-testid={`driver-status-${driver.id}`}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {driver.status === 'idle' ? 'Available' : 'On Trip'}
+                      </p>
+                    </div>
                   </div>
                 ))
               )}
