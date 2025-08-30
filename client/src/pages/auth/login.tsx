@@ -243,7 +243,7 @@ export default function Login() {
                 </Button>
               </form>
             </Form>
-          ) : (
+          ) : step === 'otp' ? (
             <Form {...otpForm}>
               <form onSubmit={otpForm.handleSubmit(onSubmitOtp)} className="space-y-4">
                 <FormField
@@ -283,7 +283,65 @@ export default function Login() {
                 </Button>
               </form>
             </Form>
-          )}
+          ) : step === 'password' ? (
+            <Form {...passwordForm}>
+              <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className="space-y-4">
+                <FormField
+                  control={passwordForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email"
+                          placeholder="admin@example.com" 
+                          {...field}
+                          data-testid="input-admin-email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={passwordForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password"
+                          placeholder="Enter your password" 
+                          {...field}
+                          data-testid="input-admin-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={passwordLoginMutation.isPending}
+                  data-testid="button-admin-submit"
+                >
+                  {passwordLoginMutation.isPending ? 'Signing In...' : 'Sign In'}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="w-full" 
+                  onClick={() => setStep('identifier')}
+                  data-testid="button-back-password"
+                >
+                  Back
+                </Button>
+              </form>
+            </Form>
+          ) : null}
         </CardContent>
       </Card>
     </div>
