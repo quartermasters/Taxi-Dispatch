@@ -13,6 +13,7 @@ import { pricingService } from "./services/pricing";
 import { paymentsService } from "./services/payments";
 import { dispatchService } from "./services/dispatch";
 import { websocketService } from "./services/websocket";
+import { OAuth2Client } from "google-auth-library";
 import { 
   otpRequestSchema, 
   otpVerifySchema, 
@@ -49,6 +50,13 @@ function requireRole(role: 'passenger' | 'driver' | 'admin') {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Google OAuth client
+  const googleClient = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${process.env.REPL_URL || 'http://localhost:5000'}/api/auth/google/callback`
+  );
+
   // Health check
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -71,6 +79,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await authService.verifyOtp(identifier, code);
       res.json(result);
     } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Google OAuth routes
+  app.get('/api/auth/google', (req, res) => {
+    const authUrl = googleClient.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['profile', 'email'],
+      prompt: 'consent'
+    });
+    res.redirect(authUrl);
+  });
+
+  app.get('/api/auth/google/callback', async (req, res) => {
+    try {
+      const { code } = req.query;
+      if (!code) {
+        return res.status(400).json({ message: 'Authorization code not provided' });
+      }
+
+      const { tokens } = await googleClient.getToken(code as string);
+      googleClient.setCredentials(tokens);
+
+      const ticket = await googleClient.verifyIdToken({
+        idToken: tokens.id_token!,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload) {
+        return res.status(400).json({ message: 'Invalid Google token' });
+      }
+
+      // Create or find user
+      const result = await authService.loginWithGoogle({
+        googleId: payload.sub,
+        email: payload.email || '',
+        name: payload.name || '',
+        picture: payload.picture
+      });
+
+      // Redirect to frontend with token
+      res.redirect(`/?token=${result.accessToken}`);
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
       res.status(400).json({ message: error.message });
     }
   });

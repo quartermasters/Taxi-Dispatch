@@ -14,6 +14,13 @@ export interface JwtPayload {
   exp: number;
 }
 
+export interface GoogleLoginData {
+  googleId: string;
+  email: string;
+  name: string;
+  picture?: string;
+}
+
 export class AuthService {
   generateOtp(): string {
     // In production, use a proper OTP generator
@@ -94,6 +101,40 @@ export class AuthService {
       throw new Error('User not found');
     }
     return user;
+  }
+
+  async loginWithGoogle(data: GoogleLoginData): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    // Check if user exists by Google ID or email
+    let user = await storage.getUserByGoogleId(data.googleId);
+    
+    if (!user && data.email) {
+      user = await storage.getUserByEmail(data.email);
+      
+      // If user exists with email but no Google ID, link the accounts
+      if (user) {
+        user = await storage.updateUser(user.id, {
+          googleId: data.googleId,
+          picture: data.picture,
+        });
+      }
+    }
+    
+    if (!user) {
+      // Create new user
+      user = await storage.createUser({
+        name: data.name,
+        email: data.email,
+        phone: '',
+        googleId: data.googleId,
+        picture: data.picture,
+        role: 'passenger',
+      });
+    }
+
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
+
+    return { accessToken, refreshToken, user };
   }
 }
 
