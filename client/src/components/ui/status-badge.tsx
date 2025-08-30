@@ -44,6 +44,41 @@ export function StatusBadge({ status, type = 'trip', className }: StatusBadgePro
     }
   };
 
+  const getStatusIcon = () => {
+    if (type === 'driver') {
+      switch (status) {
+        case 'idle':
+        case 'online':
+          return 'fas fa-circle text-green-500';
+        case 'offline':
+          return 'fas fa-circle text-gray-400';
+        case 'busy':
+          return 'fas fa-car text-blue-500';
+        default:
+          return 'fas fa-question-circle';
+      }
+    } else {
+      switch (status) {
+        case 'requested':
+          return 'fas fa-clock';
+        case 'assigned':
+          return 'fas fa-user-check';
+        case 'enroute':
+          return 'fas fa-route';
+        case 'arrived':
+          return 'fas fa-map-marker-alt';
+        case 'ongoing':
+          return 'fas fa-car-side';
+        case 'completed':
+          return 'fas fa-check-circle';
+        case 'cancelled':
+          return 'fas fa-times-circle';
+        default:
+          return 'fas fa-circle';
+      }
+    }
+  };
+
   const getDisplayText = () => {
     if (type === 'driver') {
       switch (status) {
@@ -72,6 +107,7 @@ export function StatusBadge({ status, type = 'trip', className }: StatusBadgePro
 
   return (
     <span className={cn("status-badge", getStatusClass(), className)}>
+      <i className={`${getStatusIcon()} text-xs`}></i>
       {getDisplayText()}
     </span>
   );
