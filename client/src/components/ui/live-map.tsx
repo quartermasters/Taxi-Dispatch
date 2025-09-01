@@ -420,7 +420,10 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
 
     // Add comprehensive trip markers and routes
     trips.forEach(trip => {
-      if (trip.pickupLat && trip.pickupLng && (window as any).google) {
+      if (trip.pickupLat && trip.pickupLng && trip.dropoffLat && trip.dropoffLng && 
+          !isNaN(trip.pickupLat) && !isNaN(trip.pickupLng) && 
+          !isNaN(trip.dropoffLat) && !isNaN(trip.dropoffLng) && 
+          (window as any).google) {
         // Pickup marker
         const pickupMarker = new (window as any).google.maps.Marker({
           position: { lat: trip.pickupLat, lng: trip.pickupLng },
