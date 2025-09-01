@@ -13,6 +13,7 @@ interface GoogleMap {
 interface GoogleMarker {
   setMap(map: GoogleMap | null): void;
   addListener(event: string, callback: () => void): void;
+  setPosition(position: { lat: number; lng: number }): void;
 }
 
 interface GoogleInfoWindow {
@@ -30,6 +31,8 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GoogleMap | null>(null);
   const markersRef = useRef<GoogleMarker[]>([]);
+  const animationFrameRef = useRef<number>();
+  const driverPositionsRef = useRef<Map<string, { lat: number; lng: number; targetLat: number; targetLng: number; marker: GoogleMarker }>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -204,14 +207,99 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
     };
   };
 
+  // Function to generate random movement within Dubai bounds
+  const generateRandomMovement = (currentLat: number, currentLng: number, status: string) => {
+    // Different movement patterns based on vehicle status
+    const movements = {
+      idle: 0.002, // ~200m - slow patrol movement
+      busy: 0.008, // ~800m - faster trip movement
+      offline: 0.001 // ~100m - minimal movement
+    };
+    
+    const maxMovement = movements[status as keyof typeof movements] || movements.idle;
+    
+    // For busy vehicles, create more directional movement (simulating following roads)
+    if (status === 'busy') {
+      const direction = Math.random() * 2 * Math.PI;
+      const distance = 0.003 + Math.random() * 0.005; // 300-800m
+      const deltaLat = Math.cos(direction) * distance;
+      const deltaLng = Math.sin(direction) * distance;
+      
+      const newLat = Math.max(25.0, Math.min(25.35, currentLat + deltaLat));
+      const newLng = Math.max(55.0, Math.min(55.6, currentLng + deltaLng));
+      
+      return { lat: newLat, lng: newLng };
+    } else {
+      // For idle vehicles, smaller random movements
+      const deltaLat = (Math.random() - 0.5) * maxMovement;
+      const deltaLng = (Math.random() - 0.5) * maxMovement;
+      
+      const newLat = Math.max(25.0, Math.min(25.35, currentLat + deltaLat));
+      const newLng = Math.max(55.0, Math.min(55.6, currentLng + deltaLng));
+      
+      return { lat: newLat, lng: newLng };
+    }
+  };
+
+  // Smooth animation function
+  const animateVehicle = (driverId: string, startPos: { lat: number; lng: number }, endPos: { lat: number; lng: number }, marker: GoogleMarker, status: string = 'idle') => {
+    // Different speeds based on vehicle status
+    const baseDuration = status === 'busy' ? 1500 : status === 'idle' ? 3000 : 5000;
+    const duration = baseDuration + Math.random() * 2000; // Add randomness
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth movement
+      const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+      const easedProgress = easeInOutQuad(progress);
+      
+      const currentLat = startPos.lat + (endPos.lat - startPos.lat) * easedProgress;
+      const currentLng = startPos.lng + (endPos.lng - startPos.lng) * easedProgress;
+      
+      // Update marker position
+      marker.setPosition({ lat: currentLat, lng: currentLng });
+      
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        // Update stored position and generate next target
+        const driverPos = driverPositionsRef.current.get(driverId);
+        if (driverPos) {
+          driverPos.lat = currentLat;
+          driverPos.lng = currentLng;
+          const nextTarget = generateRandomMovement(currentLat, currentLng, status);
+          driverPos.targetLat = nextTarget.lat;
+          driverPos.targetLng = nextTarget.lng;
+          
+          // Continue animation with new target
+          const waitTime = status === 'busy' ? 500 + Math.random() * 1000 : 1500 + Math.random() * 2500;
+          setTimeout(() => {
+            if (driverPositionsRef.current.has(driverId)) {
+              animateVehicle(driverId, { lat: currentLat, lng: currentLng }, nextTarget, marker, status);
+            }
+          }, waitTime);
+        }
+      }
+    };
+    
+    animate();
+  };
+
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // Clear existing markers
+    // Clear existing markers and animations
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
     markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
+    driverPositionsRef.current.clear();
 
-    // Add vehicle/driver markers with realistic icons
+    // Add vehicle/driver markers with realistic icons and animation
     drivers.forEach(driver => {
       if (driver.lat && driver.lng && (window as any).google) {
         const marker = new (window as any).google.maps.Marker({
@@ -260,6 +348,24 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
         });
 
         markersRef.current.push(marker);
+        
+        // Only animate vehicles that are idle or busy (not offline)
+        if (driver.status !== 'offline') {
+          // Store initial position and start animation
+          const initialTarget = generateRandomMovement(driver.lat, driver.lng, driver.status);
+          driverPositionsRef.current.set(driver.id, {
+            lat: driver.lat,
+            lng: driver.lng,
+            targetLat: initialTarget.lat,
+            targetLng: initialTarget.lng,
+            marker: marker
+          });
+          
+          // Start animation after a random delay
+          setTimeout(() => {
+            animateVehicle(driver.id, { lat: driver.lat, lng: driver.lng }, initialTarget, marker, driver.status);
+          }, Math.random() * 3000);
+        }
       }
     });
 
@@ -297,6 +403,14 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
         markersRef.current.push(marker);
       }
     });
+
+    // Cleanup function
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      driverPositionsRef.current.clear();
+    };
   }, [drivers, trips]);
 
   if (error) {
