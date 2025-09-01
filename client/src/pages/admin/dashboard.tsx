@@ -10,13 +10,46 @@ import { getAuthToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { wsManager } from "@/lib/websocket";
 
-// Mock data for testing
+// Mock data for testing - expanded to 38+ drivers
 const mockDrivers = [
   { id: '1', name: 'Ahmed Hassan', lat: 25.2048, lng: 55.2708, status: 'idle', phone: '+971501234567' },
   { id: '2', name: 'Mohammed Ali', lat: 25.1972, lng: 55.2744, status: 'busy', phone: '+971501234568' },
   { id: '3', name: 'Omar Saeed', lat: 25.2084, lng: 55.2719, status: 'idle', phone: '+971501234569' },
   { id: '4', name: 'Khalid Ahmad', lat: 25.1951, lng: 55.2820, status: 'busy', phone: '+971501234570' },
   { id: '5', name: 'Rashid Nasser', lat: 25.2015, lng: 55.2650, status: 'offline', phone: '+971501234571' },
+  { id: '6', name: 'Ali Mahmoud', lat: 25.2156, lng: 55.2794, status: 'idle', phone: '+971501234572' },
+  { id: '7', name: 'Hassan Al-Zahra', lat: 25.1875, lng: 55.2588, status: 'busy', phone: '+971501234573' },
+  { id: '8', name: 'Saeed Bin Rashid', lat: 25.2298, lng: 55.2901, status: 'idle', phone: '+971501234574' },
+  { id: '9', name: 'Youssef Al-Mansoori', lat: 25.1789, lng: 55.2433, status: 'offline', phone: '+971501234575' },
+  { id: '10', name: 'Abdullah Al-Fahim', lat: 25.2067, lng: 55.2812, status: 'busy', phone: '+971501234576' },
+  { id: '11', name: 'Tariq Al-Shamsi', lat: 25.1934, lng: 55.2699, status: 'idle', phone: '+971501234577' },
+  { id: '12', name: 'Nasser Al-Blooshi', lat: 25.2189, lng: 55.2567, status: 'busy', phone: '+971501234578' },
+  { id: '13', name: 'Majid Al-Ketbi', lat: 25.1823, lng: 55.2745, status: 'idle', phone: '+971501234579' },
+  { id: '14', name: 'Hamdan Al-Muhairi', lat: 25.2134, lng: 55.2623, status: 'offline', phone: '+971501234580' },
+  { id: '15', name: 'Suhail Al-Zaabi', lat: 25.1967, lng: 55.2856, status: 'busy', phone: '+971501234581' },
+  { id: '16', name: 'Faisal Al-Hammadi', lat: 25.2245, lng: 55.2478, status: 'idle', phone: '+971501234582' },
+  { id: '17', name: 'Khalifa Al-Suwaidi', lat: 25.1856, lng: 55.2712, status: 'busy', phone: '+971501234583' },
+  { id: '18', name: 'Sultan Al-Dhaheri', lat: 25.2078, lng: 55.2534, status: 'idle', phone: '+971501234584' },
+  { id: '19', name: 'Rashid Al-Qasimi', lat: 25.1923, lng: 55.2789, status: 'offline', phone: '+971501234585' },
+  { id: '20', name: 'Salem Al-Mansouri', lat: 25.2167, lng: 55.2645, status: 'busy', phone: '+971501234586' },
+  { id: '21', name: 'Obaid Al-Falasi', lat: 25.1789, lng: 55.2567, status: 'idle', phone: '+971501234587' },
+  { id: '22', name: 'Juma Al-Ghurair', lat: 25.2201, lng: 55.2823, status: 'busy', phone: '+971501234588' },
+  { id: '23', name: 'Saif Al-Nuaimi', lat: 25.1945, lng: 55.2456, status: 'idle', phone: '+971501234589' },
+  { id: '24', name: 'Marwan Al-Otaiba', lat: 25.2089, lng: 55.2734, status: 'offline', phone: '+971501234590' },
+  { id: '25', name: 'Ahmad Al-Rostamani', lat: 25.1834, lng: 55.2598, status: 'busy', phone: '+971501234591' },
+  { id: '26', name: 'Mubarak Al-Shamsi', lat: 25.2156, lng: 55.2667, status: 'idle', phone: '+971501234592' },
+  { id: '27', name: 'Zayed Al-Nahyan', lat: 25.1978, lng: 55.2789, status: 'busy', phone: '+971501234593' },
+  { id: '28', name: 'Mansour Al-Maktoum', lat: 25.2123, lng: 55.2523, status: 'idle', phone: '+971501234594' },
+  { id: '29', name: 'Hamad Al-Thani', lat: 25.1867, lng: 55.2645, status: 'offline', phone: '+971501234595' },
+  { id: '30', name: 'Rashed Al-Mulla', lat: 25.2045, lng: 55.2712, status: 'busy', phone: '+971501234596' },
+  { id: '31', name: 'Fahad Al-Sabah', lat: 25.1923, lng: 55.2578, status: 'idle', phone: '+971501234597' },
+  { id: '32', name: 'Waleed Al-Rashid', lat: 25.2178, lng: 55.2834, status: 'busy', phone: '+971501234598' },
+  { id: '33', name: 'Nawaf Al-Sabah', lat: 25.1845, lng: 55.2456, status: 'idle', phone: '+971501234599' },
+  { id: '34', name: 'Bader Al-Humaid', lat: 25.2067, lng: 55.2689, status: 'offline', phone: '+971501234600' },
+  { id: '35', name: 'Talal Al-Ghanim', lat: 25.1956, lng: 55.2756, status: 'busy', phone: '+971501234601' },
+  { id: '36', name: 'Yousef Al-Otaibi', lat: 25.2134, lng: 55.2612, status: 'idle', phone: '+971501234602' },
+  { id: '37', name: 'Khalid Al-Dosari', lat: 25.1889, lng: 55.2723, status: 'busy', phone: '+971501234603' },
+  { id: '38', name: 'Meshal Al-Thani', lat: 25.2089, lng: 55.2545, status: 'idle', phone: '+971501234604' }
 ];
 
 const mockTrips = [
@@ -53,8 +86,8 @@ export default function Dashboard() {
   });
 
   // Use mock data for testing - fallback to API data if available
-  const displayDrivers = drivers?.length > 0 ? drivers : mockDrivers;
-  const displayTrips = activeTrips?.length > 0 ? activeTrips : mockTrips;
+  const displayDrivers = (drivers && Array.isArray(drivers) && drivers.length > 0) ? drivers : mockDrivers;
+  const displayTrips = (activeTrips && Array.isArray(activeTrips) && activeTrips.length > 0) ? activeTrips : mockTrips;
   const displayZones = mockZones;
 
   const { data: wsStats } = useQuery({

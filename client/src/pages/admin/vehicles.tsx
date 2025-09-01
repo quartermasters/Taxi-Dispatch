@@ -17,58 +17,46 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock vehicle data for testing - matching the drivers
+// Mock vehicle data for testing - expanded to 38+ vehicles matching drivers
 const mockVehicles = [
-  { 
-    id: 'v1', 
-    plate: 'DUB-A123', 
-    type: 'standard', 
-    model: 'Toyota Camry', 
-    color: 'White', 
-    capacity: 4,
-    assignedDriverId: '1',
-    assignedDriver: { name: 'Ahmed Hassan', phone: '+971501234567', status: 'idle' }
-  },
-  { 
-    id: 'v2', 
-    plate: 'DUB-B456', 
-    type: 'executive', 
-    model: 'Honda Accord', 
-    color: 'Black', 
-    capacity: 4,
-    assignedDriverId: '2',
-    assignedDriver: { name: 'Mohammed Ali', phone: '+971501234568', status: 'busy' }
-  },
-  { 
-    id: 'v3', 
-    plate: 'DUB-C789', 
-    type: 'standard', 
-    model: 'Nissan Altima', 
-    color: 'Silver', 
-    capacity: 4,
-    assignedDriverId: '3',
-    assignedDriver: { name: 'Omar Saeed', phone: '+971501234569', status: 'idle' }
-  },
-  { 
-    id: 'v4', 
-    plate: 'DUB-D012', 
-    type: 'xl', 
-    model: 'Hyundai Elantra', 
-    color: 'Blue', 
-    capacity: 6,
-    assignedDriverId: '4',
-    assignedDriver: { name: 'Khalid Ahmad', phone: '+971501234570', status: 'busy' }
-  },
-  { 
-    id: 'v5', 
-    plate: 'DUB-E345', 
-    type: 'standard', 
-    model: 'Kia Optima', 
-    color: 'Red', 
-    capacity: 4,
-    assignedDriverId: '5',
-    assignedDriver: { name: 'Rashid Nasser', phone: '+971501234571', status: 'offline' }
-  },
+  { id: 'v1', plate: 'DUB-A123', type: 'standard', model: 'Toyota Camry', color: 'White', capacity: 4, assignedDriverId: '1', assignedDriver: { name: 'Ahmed Hassan', phone: '+971501234567', status: 'idle' } },
+  { id: 'v2', plate: 'DUB-B456', type: 'executive', model: 'Honda Accord', color: 'Black', capacity: 4, assignedDriverId: '2', assignedDriver: { name: 'Mohammed Ali', phone: '+971501234568', status: 'busy' } },
+  { id: 'v3', plate: 'DUB-C789', type: 'standard', model: 'Nissan Altima', color: 'Silver', capacity: 4, assignedDriverId: '3', assignedDriver: { name: 'Omar Saeed', phone: '+971501234569', status: 'idle' } },
+  { id: 'v4', plate: 'DUB-D012', type: 'xl', model: 'Hyundai Elantra', color: 'Blue', capacity: 6, assignedDriverId: '4', assignedDriver: { name: 'Khalid Ahmad', phone: '+971501234570', status: 'busy' } },
+  { id: 'v5', plate: 'DUB-E345', type: 'standard', model: 'Kia Optima', color: 'Red', capacity: 4, assignedDriverId: '5', assignedDriver: { name: 'Rashid Nasser', phone: '+971501234571', status: 'offline' } },
+  { id: 'v6', plate: 'DUB-F678', type: 'standard', model: 'Toyota Corolla', color: 'White', capacity: 4, assignedDriverId: '6', assignedDriver: { name: 'Ali Mahmoud', phone: '+971501234572', status: 'idle' } },
+  { id: 'v7', plate: 'DUB-G901', type: 'executive', model: 'Mazda 6', color: 'Red', capacity: 4, assignedDriverId: '7', assignedDriver: { name: 'Hassan Al-Zahra', phone: '+971501234573', status: 'busy' } },
+  { id: 'v8', plate: 'DUB-H234', type: 'standard', model: 'Chevrolet Malibu', color: 'Blue', capacity: 4, assignedDriverId: '8', assignedDriver: { name: 'Saeed Bin Rashid', phone: '+971501234574', status: 'idle' } },
+  { id: 'v9', plate: 'DUB-I567', type: 'standard', model: 'Ford Focus', color: 'Silver', capacity: 4, assignedDriverId: '9', assignedDriver: { name: 'Youssef Al-Mansoori', phone: '+971501234575', status: 'offline' } },
+  { id: 'v10', plate: 'DUB-J890', type: 'executive', model: 'Volkswagen Passat', color: 'Black', capacity: 4, assignedDriverId: '10', assignedDriver: { name: 'Abdullah Al-Fahim', phone: '+971501234576', status: 'busy' } },
+  { id: 'v11', plate: 'DUB-K123', type: 'standard', model: 'Peugeot 508', color: 'Gray', capacity: 4, assignedDriverId: '11', assignedDriver: { name: 'Tariq Al-Shamsi', phone: '+971501234577', status: 'idle' } },
+  { id: 'v12', plate: 'DUB-L456', type: 'executive', model: 'Skoda Octavia', color: 'White', capacity: 4, assignedDriverId: '12', assignedDriver: { name: 'Nasser Al-Blooshi', phone: '+971501234578', status: 'busy' } },
+  { id: 'v13', plate: 'DUB-M789', type: 'standard', model: 'Renault Megane', color: 'Blue', capacity: 4, assignedDriverId: '13', assignedDriver: { name: 'Majid Al-Ketbi', phone: '+971501234579', status: 'idle' } },
+  { id: 'v14', plate: 'DUB-N012', type: 'standard', model: 'Seat Leon', color: 'Red', capacity: 4, assignedDriverId: '14', assignedDriver: { name: 'Hamdan Al-Muhairi', phone: '+971501234580', status: 'offline' } },
+  { id: 'v15', plate: 'DUB-O345', type: 'xl', model: 'Mitsubishi Lancer', color: 'Silver', capacity: 6, assignedDriverId: '15', assignedDriver: { name: 'Suhail Al-Zaabi', phone: '+971501234581', status: 'busy' } },
+  { id: 'v16', plate: 'DUB-P678', type: 'executive', model: 'Subaru Legacy', color: 'Black', capacity: 4, assignedDriverId: '16', assignedDriver: { name: 'Faisal Al-Hammadi', phone: '+971501234582', status: 'idle' } },
+  { id: 'v17', plate: 'DUB-Q901', type: 'standard', model: 'Opel Insignia', color: 'White', capacity: 4, assignedDriverId: '17', assignedDriver: { name: 'Khalifa Al-Suwaidi', phone: '+971501234583', status: 'busy' } },
+  { id: 'v18', plate: 'DUB-R234', type: 'executive', model: 'Infiniti Q50', color: 'Gray', capacity: 4, assignedDriverId: '18', assignedDriver: { name: 'Sultan Al-Dhaheri', phone: '+971501234584', status: 'idle' } },
+  { id: 'v19', plate: 'DUB-S567', type: 'executive', model: 'Lexus ES', color: 'Blue', capacity: 4, assignedDriverId: '19', assignedDriver: { name: 'Rashid Al-Qasimi', phone: '+971501234585', status: 'offline' } },
+  { id: 'v20', plate: 'DUB-T890', type: 'xl', model: 'Acura TLX', color: 'Red', capacity: 6, assignedDriverId: '20', assignedDriver: { name: 'Salem Al-Mansouri', phone: '+971501234586', status: 'busy' } },
+  { id: 'v21', plate: 'DUB-U123', type: 'executive', model: 'Cadillac ATS', color: 'Black', capacity: 4, assignedDriverId: '21', assignedDriver: { name: 'Obaid Al-Falasi', phone: '+971501234587', status: 'idle' } },
+  { id: 'v22', plate: 'DUB-V456', type: 'executive', model: 'Lincoln MKZ', color: 'Silver', capacity: 4, assignedDriverId: '22', assignedDriver: { name: 'Juma Al-Ghurair', phone: '+971501234588', status: 'busy' } },
+  { id: 'v23', plate: 'DUB-W789', type: 'executive', model: 'Genesis G80', color: 'White', capacity: 4, assignedDriverId: '23', assignedDriver: { name: 'Saif Al-Nuaimi', phone: '+971501234589', status: 'idle' } },
+  { id: 'v24', plate: 'DUB-X012', type: 'executive', model: 'Volvo S60', color: 'Gray', capacity: 4, assignedDriverId: '24', assignedDriver: { name: 'Marwan Al-Otaiba', phone: '+971501234590', status: 'offline' } },
+  { id: 'v25', plate: 'DUB-Y345', type: 'executive', model: 'Jaguar XE', color: 'Blue', capacity: 4, assignedDriverId: '25', assignedDriver: { name: 'Ahmad Al-Rostamani', phone: '+971501234591', status: 'busy' } },
+  { id: 'v26', plate: 'DUB-Z678', type: 'executive', model: 'Audi A4', color: 'Red', capacity: 4, assignedDriverId: '26', assignedDriver: { name: 'Mubarak Al-Shamsi', phone: '+971501234592', status: 'idle' } },
+  { id: 'v27', plate: 'DUB-AA901', type: 'executive', model: 'BMW 3 Series', color: 'Black', capacity: 4, assignedDriverId: '27', assignedDriver: { name: 'Zayed Al-Nahyan', phone: '+971501234593', status: 'busy' } },
+  { id: 'v28', plate: 'DUB-BB234', type: 'executive', model: 'Mercedes C-Class', color: 'Silver', capacity: 4, assignedDriverId: '28', assignedDriver: { name: 'Mansour Al-Maktoum', phone: '+971501234594', status: 'idle' } },
+  { id: 'v29', plate: 'DUB-CC567', type: 'xl', model: 'Porsche Macan', color: 'White', capacity: 6, assignedDriverId: '29', assignedDriver: { name: 'Hamad Al-Thani', phone: '+971501234595', status: 'offline' } },
+  { id: 'v30', plate: 'DUB-DD890', type: 'executive', model: 'Tesla Model 3', color: 'Gray', capacity: 4, assignedDriverId: '30', assignedDriver: { name: 'Rashed Al-Mulla', phone: '+971501234596', status: 'busy' } },
+  { id: 'v31', plate: 'DUB-EE123', type: 'xl', model: 'Range Rover Evoque', color: 'Blue', capacity: 6, assignedDriverId: '31', assignedDriver: { name: 'Fahad Al-Sabah', phone: '+971501234597', status: 'idle' } },
+  { id: 'v32', plate: 'DUB-FF456', type: 'executive', model: 'Maserati Ghibli', color: 'Red', capacity: 4, assignedDriverId: '32', assignedDriver: { name: 'Waleed Al-Rashid', phone: '+971501234598', status: 'busy' } },
+  { id: 'v33', plate: 'DUB-GG789', type: 'executive', model: 'Bentley Flying Spur', color: 'Black', capacity: 4, assignedDriverId: '33', assignedDriver: { name: 'Nawaf Al-Sabah', phone: '+971501234599', status: 'idle' } },
+  { id: 'v34', plate: 'DUB-HH012', type: 'executive', model: 'Ferrari Portofino', color: 'Red', capacity: 2, assignedDriverId: '34', assignedDriver: { name: 'Bader Al-Humaid', phone: '+971501234600', status: 'offline' } },
+  { id: 'v35', plate: 'DUB-II345', type: 'executive', model: 'Lamborghini Huracan', color: 'Yellow', capacity: 2, assignedDriverId: '35', assignedDriver: { name: 'Talal Al-Ghanim', phone: '+971501234601', status: 'busy' } },
+  { id: 'v36', plate: 'DUB-JJ678', type: 'executive', model: 'McLaren 570S', color: 'Orange', capacity: 2, assignedDriverId: '36', assignedDriver: { name: 'Yousef Al-Otaibi', phone: '+971501234602', status: 'idle' } },
+  { id: 'v37', plate: 'DUB-KK901', type: 'executive', model: 'Aston Martin DB11', color: 'Silver', capacity: 2, assignedDriverId: '37', assignedDriver: { name: 'Khalid Al-Dosari', phone: '+971501234603', status: 'busy' } },
+  { id: 'v38', plate: 'DUB-LL234', type: 'executive', model: 'Rolls Royce Ghost', color: 'Black', capacity: 4, assignedDriverId: '38', assignedDriver: { name: 'Meshal Al-Thani', phone: '+971501234604', status: 'idle' } }
 ];
 
 const vehicleFormSchema = z.object({
