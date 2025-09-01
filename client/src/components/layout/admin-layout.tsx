@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <h1 className="text-xl font-semibold text-foreground">Taxi Dispatch</h1>
           <p className="text-sm text-muted-foreground">Admin Console</p>
         </div>
-        <nav className="mt-6 flex-1">
+        <nav className="mt-6">
           {navigation.map((item) => {
             const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
             return (
@@ -47,6 +47,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             );
           })}
         </nav>
+        
+        {/* Spacer to push logout to bottom */}
+        <div className="flex-1"></div>
         
         {/* Bottom logout section */}
         <div className="border-t border-border">
