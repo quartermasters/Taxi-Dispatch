@@ -23,12 +23,28 @@ interface GoogleInfoWindow {
 interface LiveMapProps {
   className?: string;
   drivers?: Array<{ id: string; lat: number; lng: number; status: string; name?: string }>;
-  trips?: Array<{ id: string; pickupLat: number; pickupLng: number; status: string }>;
+  trips?: Array<{ 
+    id: string; 
+    pickupLat: number; 
+    pickupLng: number; 
+    dropoffLat: number; 
+    dropoffLng: number; 
+    status: string; 
+    passengerName: string;
+    driverName?: string;
+    vehiclePlate?: string;
+    pickupAddress: string;
+    dropoffAddress: string;
+    fareQuote: number;
+    distanceKm: number;
+  }>;
   showLegend?: boolean;
   activeFilter?: 'drivers' | 'trips' | 'zones';
+  selectedTrip?: any;
+  onTripSelect?: (trip: any) => void;
 }
 
-export function LiveMap({ className, drivers = [], trips = [], showLegend = true, activeFilter = 'drivers' }: LiveMapProps) {
+export function LiveMap({ className, drivers = [], trips = [], showLegend = true, activeFilter = 'drivers', selectedTrip, onTripSelect }: LiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GoogleMap | null>(null);
   const markersRef = useRef<GoogleMarker[]>([]);
@@ -187,16 +203,46 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
         
         <!-- Pin body -->
         <path d="M16 4 C10 4 6 8 6 14 C6 20 16 28 16 28 S26 20 26 14 C26 8 22 4 16 4 Z" 
-              fill="#f59e0b" stroke="#ffffff" stroke-width="2"/>
+              fill="#10b981" stroke="#ffffff" stroke-width="2"/>
         
         <!-- Pin center -->
         <circle cx="16" cy="14" r="5" fill="#ffffff"/>
-        <circle cx="16" cy="14" r="3" fill="#f59e0b"/>
+        <circle cx="16" cy="14" r="3" fill="#10b981"/>
         
         <!-- Person icon -->
         <g transform="translate(16,14) scale(0.7)">
           <circle cx="0" cy="-2" r="2" fill="#ffffff"/>
           <path d="M-3 4 Q-3 0 0 0 Q3 0 3 4 L-3 4" fill="#ffffff"/>
+        </g>
+      </svg>
+    `;
+    
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgContent)}`,
+      scaledSize: new (window as any).google.maps.Size(32, 32),
+      anchor: new (window as any).google.maps.Point(16, 28)
+    };
+  };
+
+  // Create dropoff location icon
+  const createDropoffIcon = () => {
+    const svgContent = `
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shadow -->
+        <ellipse cx="16" cy="28" rx="12" ry="3" fill="rgba(0,0,0,0.2)"/>
+        
+        <!-- Pin body -->
+        <path d="M16 4 C10 4 6 8 6 14 C6 20 16 28 16 28 S26 20 26 14 C26 8 22 4 16 4 Z" 
+              fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+        
+        <!-- Pin center -->
+        <circle cx="16" cy="14" r="5" fill="#ffffff"/>
+        <circle cx="16" cy="14" r="3" fill="#ef4444"/>
+        
+        <!-- Flag icon -->
+        <g transform="translate(16,14) scale(0.8)">
+          <path d="M-3 -3 L-3 3 L3 1 L3 -1 L-3 -3 Z" fill="#ffffff"/>
+          <rect x="-4" y="-4" width="1" height="8" fill="#ffffff"/>
         </g>
       </svg>
     `;
@@ -372,38 +418,109 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
       }
     });
 
-    // Add trip markers with pickup icons
+    // Add comprehensive trip markers and routes
     trips.forEach(trip => {
       if (trip.pickupLat && trip.pickupLng && (window as any).google) {
-        const marker = new (window as any).google.maps.Marker({
+        // Pickup marker
+        const pickupMarker = new (window as any).google.maps.Marker({
           position: { lat: trip.pickupLat, lng: trip.pickupLng },
           map: mapInstanceRef.current,
-          title: `Trip ${trip.id}`,
+          title: `Trip ${trip.id} - Pickup`,
           icon: createPickupIcon(),
           zIndex: 800
         }) as GoogleMarker;
 
-        const infoWindow = new (window as any).google.maps.InfoWindow({
+        // Dropoff marker
+        const dropoffMarker = new (window as any).google.maps.Marker({
+          position: { lat: trip.dropoffLat, lng: trip.dropoffLng },
+          map: mapInstanceRef.current,
+          title: `Trip ${trip.id} - Dropoff`,
+          icon: createDropoffIcon(),
+          zIndex: 800
+        }) as GoogleMarker;
+
+        // Trip route line
+        const routeLine = new (window as any).google.maps.Polyline({
+          path: [
+            { lat: trip.pickupLat, lng: trip.pickupLng },
+            { lat: trip.dropoffLat, lng: trip.dropoffLng }
+          ],
+          geodesic: true,
+          strokeColor: trip.status === 'completed' ? '#10b981' : trip.status === 'in_progress' ? '#3b82f6' : '#f59e0b',
+          strokeOpacity: 0.8,
+          strokeWeight: 3,
+          map: mapInstanceRef.current
+        });
+
+        const pickupInfoWindow = new (window as any).google.maps.InfoWindow({
           content: `
-            <div class="p-3 min-w-[180px]">
-              <div class="flex items-center space-x-2 mb-2">
-                <i class="fas fa-map-marker-alt text-amber-500"></i>
-                <h3 class="font-semibold text-gray-800">Pickup Location</h3>
+            <div class="p-4 min-w-[280px]">
+              <div class="flex items-center space-x-2 mb-3">
+                <i class="fas fa-circle text-green-500"></i>
+                <h3 class="font-semibold text-gray-800">Trip #${trip.id.slice(-3)} - Pickup</h3>
               </div>
-              <div class="space-y-1 text-sm text-gray-600">
-                <p><strong>Trip ID:</strong> ${trip.id}</p>
-                <p><strong>Status:</strong> ${trip.status}</p>
-                <p><strong>Coordinates:</strong> ${trip.pickupLat.toFixed(4)}, ${trip.pickupLng.toFixed(4)}</p>
+              <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p class="text-gray-600 font-medium">Passenger</p>
+                  <p class="text-gray-800">${trip.passengerName}</p>
+                </div>
+                <div>
+                  <p class="text-gray-600 font-medium">Driver</p>
+                  <p class="text-gray-800">${trip.driverName || 'Unassigned'}</p>
+                </div>
+                <div>
+                  <p class="text-gray-600 font-medium">Vehicle</p>
+                  <p class="text-gray-800">${trip.vehiclePlate || 'N/A'}</p>
+                </div>
+                <div>
+                  <p class="text-gray-600 font-medium">Status</p>
+                  <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                    trip.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    trip.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                    trip.status === 'accepted' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }">${trip.status}</span>
+                </div>
+              </div>
+              <div class="mt-3 pt-3 border-t border-gray-200">
+                <div class="flex justify-between text-xs text-gray-600">
+                  <span>Distance: ${trip.distanceKm} km</span>
+                  <span>Fare: AED ${(trip.fareQuote / 100).toFixed(2)}</span>
+                </div>
               </div>
             </div>
           `
         }) as GoogleInfoWindow;
 
-        marker.addListener('click', () => {
-          infoWindow.open(mapInstanceRef.current as GoogleMap, marker);
+        const dropoffInfoWindow = new (window as any).google.maps.InfoWindow({
+          content: `
+            <div class="p-4 min-w-[250px]">
+              <div class="flex items-center space-x-2 mb-3">
+                <i class="fas fa-circle text-red-500"></i>
+                <h3 class="font-semibold text-gray-800">Trip #${trip.id.slice(-3)} - Destination</h3>
+              </div>
+              <div class="space-y-2 text-sm">
+                <p class="text-gray-600"><strong>Address:</strong></p>
+                <p class="text-gray-800">${trip.dropoffAddress}</p>
+                <div class="flex justify-between text-xs text-gray-600 pt-2 border-t">
+                  <span>Coordinates: ${trip.dropoffLat.toFixed(4)}, ${trip.dropoffLng.toFixed(4)}</span>
+                </div>
+              </div>
+            </div>
+          `
+        }) as GoogleInfoWindow;
+
+        pickupMarker.addListener('click', () => {
+          pickupInfoWindow.open(mapInstanceRef.current as GoogleMap, pickupMarker);
+          onTripSelect && onTripSelect(trip);
         });
 
-        markersRef.current.push(marker);
+        dropoffMarker.addListener('click', () => {
+          dropoffInfoWindow.open(mapInstanceRef.current as GoogleMap, dropoffMarker);
+          onTripSelect && onTripSelect(trip);
+        });
+
+        markersRef.current.push(pickupMarker, dropoffMarker);
       }
     });
 
