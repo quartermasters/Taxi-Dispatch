@@ -249,7 +249,7 @@ export default function Dashboard() {
                     data-testid="filter-drivers"
                   >
                     <i className="fas fa-user-tie"></i>
-                    <span>Drivers ({displayDrivers.filter(d => d.status !== 'offline').length})</span>
+                    <span>Drivers ({displayDrivers.filter((d: any) => d.status !== 'offline').length})</span>
                   </button>
                   <button 
                     onClick={() => setActiveFilter('trips')}
@@ -281,19 +281,19 @@ export default function Dashboard() {
             <CardContent className="p-0">
               <LiveMap 
                 className="h-96" 
-                drivers={activeFilter === 'drivers' || activeFilter === 'zones' ? displayDrivers.map((d: any) => ({
+                drivers={displayDrivers.map((d: any) => ({
                   id: d.id,
                   lat: d.lat,
                   lng: d.lng,
                   status: d.status,
                   name: d.name
-                })) : []}
-                trips={activeFilter === 'trips' || activeFilter === 'zones' ? displayTrips.map((trip: any) => ({
+                }))}
+                trips={displayTrips.map((trip: any) => ({
                   id: trip.id,
                   pickupLat: trip.pickupLat,
                   pickupLng: trip.pickupLng,
                   status: trip.status
-                })) : []}
+                }))}
               />
             </CardContent>
           </Card>
@@ -346,25 +346,25 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">WebSocket Connections</span>
                 <span className="text-sm font-medium text-foreground" data-testid="ws-total-connections">
-                  {wsStats?.total || 0}
+                  {(wsStats as any)?.total || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Connected Passengers</span>
                 <span className="text-sm font-medium text-foreground" data-testid="ws-passenger-connections">
-                  {wsStats?.passengers || 0}
+                  {(wsStats as any)?.passengers || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Connected Drivers</span>
                 <span className="text-sm font-medium text-foreground" data-testid="ws-driver-connections">
-                  {wsStats?.drivers || 0}
+                  {(wsStats as any)?.drivers || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Admin Sessions</span>
                 <span className="text-sm font-medium text-foreground" data-testid="ws-admin-connections">
-                  {wsStats?.admins || 0}
+                  {(wsStats as any)?.admins || 0}
                 </span>
               </div>
             </CardContent>
@@ -374,19 +374,19 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Online Drivers ({displayDrivers.filter(d => d.status !== 'offline').length})</CardTitle>
+                <CardTitle>Online Drivers ({displayDrivers.filter((d: any) => d.status !== 'offline').length})</CardTitle>
                 <button className="text-sm text-primary hover:text-primary/80" data-testid="view-all-drivers">
                   View All
                 </button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3 max-h-64 overflow-y-auto">
-              {displayDrivers.filter(d => d.status !== 'offline').length === 0 ? (
+              {displayDrivers.filter((d: any) => d.status !== 'offline').length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground" data-testid="empty-drivers">
                   No drivers online
                 </div>
               ) : (
-                displayDrivers.filter(d => d.status !== 'offline').map((driver: any) => (
+                displayDrivers.filter((d: any) => d.status !== 'offline').map((driver: any) => (
                   <div key={driver.id} className="flex items-center justify-between" data-testid={`driver-card-${driver.id}`}>
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
