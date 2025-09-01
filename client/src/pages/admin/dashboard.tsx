@@ -10,52 +10,54 @@ import { getAuthToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
 import { wsManager } from "@/lib/websocket";
 
-// Mock data for testing - expanded to 38+ drivers
+// Mock data for testing - expanded to 38+ drivers scattered across Dubai
 const mockDrivers = [
-  { id: '1', name: 'Ahmed Hassan', lat: 25.2048, lng: 55.2708, status: 'idle', phone: '+971501234567' },
-  { id: '2', name: 'Mohammed Ali', lat: 25.1972, lng: 55.2744, status: 'busy', phone: '+971501234568' },
-  { id: '3', name: 'Omar Saeed', lat: 25.2084, lng: 55.2719, status: 'idle', phone: '+971501234569' },
-  { id: '4', name: 'Khalid Ahmad', lat: 25.1951, lng: 55.2820, status: 'busy', phone: '+971501234570' },
-  { id: '5', name: 'Rashid Nasser', lat: 25.2015, lng: 55.2650, status: 'offline', phone: '+971501234571' },
-  { id: '6', name: 'Ali Mahmoud', lat: 25.2156, lng: 55.2794, status: 'idle', phone: '+971501234572' },
-  { id: '7', name: 'Hassan Al-Zahra', lat: 25.1875, lng: 55.2588, status: 'busy', phone: '+971501234573' },
-  { id: '8', name: 'Saeed Bin Rashid', lat: 25.2298, lng: 55.2901, status: 'idle', phone: '+971501234574' },
-  { id: '9', name: 'Youssef Al-Mansoori', lat: 25.1789, lng: 55.2433, status: 'offline', phone: '+971501234575' },
-  { id: '10', name: 'Abdullah Al-Fahim', lat: 25.2067, lng: 55.2812, status: 'busy', phone: '+971501234576' },
-  { id: '11', name: 'Tariq Al-Shamsi', lat: 25.1934, lng: 55.2699, status: 'idle', phone: '+971501234577' },
-  { id: '12', name: 'Nasser Al-Blooshi', lat: 25.2189, lng: 55.2567, status: 'busy', phone: '+971501234578' },
-  { id: '13', name: 'Majid Al-Ketbi', lat: 25.1823, lng: 55.2745, status: 'idle', phone: '+971501234579' },
-  { id: '14', name: 'Hamdan Al-Muhairi', lat: 25.2134, lng: 55.2623, status: 'offline', phone: '+971501234580' },
-  { id: '15', name: 'Suhail Al-Zaabi', lat: 25.1967, lng: 55.2856, status: 'busy', phone: '+971501234581' },
-  { id: '16', name: 'Faisal Al-Hammadi', lat: 25.2245, lng: 55.2478, status: 'idle', phone: '+971501234582' },
-  { id: '17', name: 'Khalifa Al-Suwaidi', lat: 25.1856, lng: 55.2712, status: 'busy', phone: '+971501234583' },
-  { id: '18', name: 'Sultan Al-Dhaheri', lat: 25.2078, lng: 55.2534, status: 'idle', phone: '+971501234584' },
-  { id: '19', name: 'Rashid Al-Qasimi', lat: 25.1923, lng: 55.2789, status: 'offline', phone: '+971501234585' },
-  { id: '20', name: 'Salem Al-Mansouri', lat: 25.2167, lng: 55.2645, status: 'busy', phone: '+971501234586' },
-  { id: '21', name: 'Obaid Al-Falasi', lat: 25.1789, lng: 55.2567, status: 'idle', phone: '+971501234587' },
-  { id: '22', name: 'Juma Al-Ghurair', lat: 25.2201, lng: 55.2823, status: 'busy', phone: '+971501234588' },
-  { id: '23', name: 'Saif Al-Nuaimi', lat: 25.1945, lng: 55.2456, status: 'idle', phone: '+971501234589' },
-  { id: '24', name: 'Marwan Al-Otaiba', lat: 25.2089, lng: 55.2734, status: 'offline', phone: '+971501234590' },
-  { id: '25', name: 'Ahmad Al-Rostamani', lat: 25.1834, lng: 55.2598, status: 'busy', phone: '+971501234591' },
-  { id: '26', name: 'Mubarak Al-Shamsi', lat: 25.2156, lng: 55.2667, status: 'idle', phone: '+971501234592' },
-  { id: '27', name: 'Zayed Al-Nahyan', lat: 25.1978, lng: 55.2789, status: 'busy', phone: '+971501234593' },
-  { id: '28', name: 'Mansour Al-Maktoum', lat: 25.2123, lng: 55.2523, status: 'idle', phone: '+971501234594' },
-  { id: '29', name: 'Hamad Al-Thani', lat: 25.1867, lng: 55.2645, status: 'offline', phone: '+971501234595' },
-  { id: '30', name: 'Rashed Al-Mulla', lat: 25.2045, lng: 55.2712, status: 'busy', phone: '+971501234596' },
-  { id: '31', name: 'Fahad Al-Sabah', lat: 25.1923, lng: 55.2578, status: 'idle', phone: '+971501234597' },
-  { id: '32', name: 'Waleed Al-Rashid', lat: 25.2178, lng: 55.2834, status: 'busy', phone: '+971501234598' },
-  { id: '33', name: 'Nawaf Al-Sabah', lat: 25.1845, lng: 55.2456, status: 'idle', phone: '+971501234599' },
-  { id: '34', name: 'Bader Al-Humaid', lat: 25.2067, lng: 55.2689, status: 'offline', phone: '+971501234600' },
-  { id: '35', name: 'Talal Al-Ghanim', lat: 25.1956, lng: 55.2756, status: 'busy', phone: '+971501234601' },
-  { id: '36', name: 'Yousef Al-Otaibi', lat: 25.2134, lng: 55.2612, status: 'idle', phone: '+971501234602' },
-  { id: '37', name: 'Khalid Al-Dosari', lat: 25.1889, lng: 55.2723, status: 'busy', phone: '+971501234603' },
-  { id: '38', name: 'Meshal Al-Thani', lat: 25.2089, lng: 55.2545, status: 'idle', phone: '+971501234604' }
+  { id: '1', name: 'Ahmed Hassan', lat: 25.2048, lng: 55.2708, status: 'idle', phone: '+971501234567' }, // Downtown Dubai
+  { id: '2', name: 'Mohammed Ali', lat: 25.0757, lng: 55.1447, status: 'busy', phone: '+971501234568' }, // Dubai Marina
+  { id: '3', name: 'Omar Saeed', lat: 25.3548, lng: 55.4210, status: 'idle', phone: '+971501234569' }, // Sharjah Border
+  { id: '4', name: 'Khalid Ahmad', lat: 25.1310, lng: 55.1870, status: 'busy', phone: '+971501234570' }, // Jumeirah Beach Residence
+  { id: '5', name: 'Rashid Nasser', lat: 25.2285, lng: 55.3573, status: 'offline', phone: '+971501234571' }, // Dubai International Airport
+  { id: '6', name: 'Ali Mahmoud', lat: 25.0934, lng: 55.1560, status: 'idle', phone: '+971501234572' }, // Palm Jumeirah
+  { id: '7', name: 'Hassan Al-Zahra', lat: 25.2582, lng: 55.3644, status: 'busy', phone: '+971501234573' }, // Deira
+  { id: '8', name: 'Saeed Bin Rashid', lat: 25.1151, lng: 55.2067, status: 'idle', phone: '+971501234574' }, // Business Bay
+  { id: '9', name: 'Youssef Al-Mansoori', lat: 25.0329, lng: 55.1165, status: 'offline', phone: '+971501234575' }, // Al Garhoud
+  { id: '10', name: 'Abdullah Al-Fahim', lat: 25.2285, lng: 55.2923, status: 'busy', phone: '+971501234576' }, // Bur Dubai
+  { id: '11', name: 'Tariq Al-Shamsi', lat: 25.0425, lng: 55.2172, status: 'idle', phone: '+971501234577' }, // Al Barsha
+  { id: '12', name: 'Nasser Al-Blooshi', lat: 25.2769, lng: 55.3875, status: 'busy', phone: '+971501234578' }, // Naif
+  { id: '13', name: 'Majid Al-Ketbi', lat: 25.1336, lng: 55.1860, status: 'idle', phone: '+971501234579' }, // Dubai Sports City
+  { id: '14', name: 'Hamdan Al-Muhairi', lat: 25.2048, lng: 55.1484, status: 'offline', phone: '+971501234580' }, // Sheikh Zayed Road
+  { id: '15', name: 'Suhail Al-Zaabi', lat: 25.0658, lng: 55.1413, status: 'busy', phone: '+971501234581' }, // Dubai Marina South
+  { id: '16', name: 'Faisal Al-Hammadi', lat: 25.3011, lng: 55.3768, status: 'idle', phone: '+971501234582' }, // Al Qusais
+  { id: '17', name: 'Khalifa Al-Suwaidi', lat: 25.1972, lng: 55.2388, status: 'busy', phone: '+971501234583' }, // DIFC
+  { id: '18', name: 'Sultan Al-Dhaheri', lat: 25.0570, lng: 55.2174, status: 'idle', phone: '+971501234584' }, // Al Sufouh
+  { id: '19', name: 'Rashid Al-Qasimi', lat: 25.2582, lng: 55.3342, status: 'offline', phone: '+971501234585' }, // Al Rigga
+  { id: '20', name: 'Salem Al-Mansouri', lat: 25.0748, lng: 55.1336, status: 'busy', phone: '+971501234586' }, // Marina Walk
+  { id: '21', name: 'Obaid Al-Falasi', lat: 25.1789, lng: 55.2567, status: 'idle', phone: '+971501234587' }, // Trade Centre
+  { id: '22', name: 'Juma Al-Ghurair', lat: 25.2344, lng: 55.2972, status: 'busy', phone: '+971501234588' }, // Karama
+  { id: '23', name: 'Saif Al-Nuaimi', lat: 25.0435, lng: 55.1919, status: 'idle', phone: '+971501234589' }, // Mall of the Emirates
+  { id: '24', name: 'Marwan Al-Otaiba', lat: 25.2665, lng: 55.3132, status: 'offline', phone: '+971501234590' }, // Port Saeed
+  { id: '25', name: 'Ahmad Al-Rostamani', lat: 25.1413, lng: 55.1947, status: 'busy', phone: '+971501234591' }, // Jumeirah
+  { id: '26', name: 'Mubarak Al-Shamsi', lat: 25.2769, lng: 55.3875, status: 'idle', phone: '+971501234592' }, // Al Murar
+  { id: '27', name: 'Zayed Al-Nahyan', lat: 25.0658, lng: 55.1726, status: 'busy', phone: '+971501234593' }, // Knowledge Village
+  { id: '28', name: 'Mansour Al-Maktoum', lat: 25.2285, lng: 55.1484, status: 'idle', phone: '+971501234594' }, // Emirates Hills
+  { id: '29', name: 'Hamad Al-Thani', lat: 25.0329, lng: 55.2165, status: 'offline', phone: '+971501234595' }, // Motor City
+  { id: '30', name: 'Rashed Al-Mulla', lat: 25.2435, lng: 55.3572, status: 'busy', phone: '+971501234596' }, // Al Hamriya
+  { id: '31', name: 'Fahad Al-Sabah', lat: 25.1151, lng: 55.1336, status: 'idle', phone: '+971501234597' }, // Bluewaters Island
+  { id: '32', name: 'Waleed Al-Rashid', lat: 25.3011, lng: 55.3935, status: 'busy', phone: '+971501234598' }, // Muhaisnah
+  { id: '33', name: 'Nawaf Al-Sabah', lat: 25.0570, lng: 55.1413, status: 'idle', phone: '+971501234599' }, // Internet City
+  { id: '34', name: 'Bader Al-Humaid', lat: 25.2769, lng: 55.3044, status: 'offline', phone: '+971501234600' }, // Oud Metha
+  { id: '35', name: 'Talal Al-Ghanim', lat: 25.1789, lng: 55.2923, status: 'busy', phone: '+971501234601' }, // Satwa
+  { id: '36', name: 'Yousef Al-Otaibi', lat: 25.0748, lng: 55.1947, status: 'idle', phone: '+971501234602' }, // Umm Suqeim
+  { id: '37', name: 'Khalid Al-Dosari', lat: 25.2435, lng: 55.3132, status: 'busy', phone: '+971501234603' }, // Creek
+  { id: '38', name: 'Meshal Al-Thani', lat: 25.1336, lng: 55.1560, status: 'idle', phone: '+971501234604' } // Media City
 ];
 
 const mockTrips = [
-  { id: 'trip-1', passengerId: 'pass-1', pickupLat: 25.2000, pickupLng: 55.2700, status: 'accepted', fareQuote: 2500 },
-  { id: 'trip-2', passengerId: 'pass-2', pickupLat: 25.1980, pickupLng: 55.2780, status: 'in_progress', fareQuote: 3200 },
-  { id: 'trip-3', passengerId: 'pass-3', pickupLat: 25.2060, pickupLng: 55.2690, status: 'pending', fareQuote: 1800 },
+  { id: 'trip-1', passengerId: 'pass-1', pickupLat: 25.0757, pickupLng: 55.1447, status: 'accepted', fareQuote: 2500 }, // Dubai Marina
+  { id: 'trip-2', passengerId: 'pass-2', pickupLat: 25.2582, pickupLng: 55.3644, status: 'in_progress', fareQuote: 3200 }, // Deira
+  { id: 'trip-3', passengerId: 'pass-3', pickupLat: 25.1413, pickupLng: 55.1947, status: 'pending', fareQuote: 1800 }, // Jumeirah
+  { id: 'trip-4', passengerId: 'pass-4', pickupLat: 25.0934, pickupLng: 55.1560, status: 'accepted', fareQuote: 4200 }, // Palm Jumeirah
+  { id: 'trip-5', passengerId: 'pass-5', pickupLat: 25.2285, pickupLng: 55.3573, status: 'in_progress', fareQuote: 2800 }, // Dubai International Airport
 ];
 
 const mockZones = [
