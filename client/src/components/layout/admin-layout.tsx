@@ -10,7 +10,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
 
   const navigation = [
-    { name: 'Live Board', href: '/', icon: 'fas fa-tv' },
+    { name: 'Overview', href: '/', icon: 'fas fa-tv' },
     { name: 'Trips', href: '/trips', icon: 'fas fa-route' },
     { name: 'Drivers', href: '/drivers', icon: 'fas fa-id-card' },
     { name: 'Vehicles', href: '/vehicles', icon: 'fas fa-car-side' },
@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                   <i className="fas fa-code"></i>
                   <span>Developed by</span>
-                  <span className="font-medium text-primary">Quartermasters Tech Team</span>
+                  <span className="font-medium text-primary">Quartermasters FZC</span>
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-1 text-xs text-muted-foreground">

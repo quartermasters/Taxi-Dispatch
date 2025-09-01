@@ -66,6 +66,35 @@ const mockZones = [
   { id: 'zone-3', name: 'Dubai Mall Area', centerLat: 25.1975, centerLng: 55.2744, multiplier: 2.0 },
 ];
 
+// Analytics and efficiency mock data
+const mockAnalytics = {
+  customerSurveys: {
+    totalResponses: 1247,
+    averageRating: 4.6,
+    ratings: { 5: 687, 4: 421, 3: 89, 2: 32, 1: 18 },
+    lastWeekRating: 4.7,
+    satisfaction: 92.3
+  },
+  efficiency: {
+    totalKilometers: 156789,
+    totalMiles: 97456,
+    fuelConsumed: 12456, // liters
+    avgFuelEconomy: 12.6, // km/l
+    co2Emissions: 29345, // kg
+    totalMaintenanceCost: 45678, // AED
+    maintenanceScheduled: 12,
+    maintenanceOverdue: 3
+  },
+  performance: {
+    averageRideTime: 18.5, // minutes
+    averageWaitTime: 4.2, // minutes
+    onTimePercentage: 94.7,
+    cancelationRate: 3.2,
+    driverUtilization: 78.9,
+    revenuePerKm: 2.85 // AED
+  }
+};
+
 export default function Dashboard() {
   const token = getAuthToken();
   const { isAuthenticated } = useAuth();
@@ -132,8 +161,8 @@ export default function Dashboard() {
       <header className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-foreground" data-testid="page-title">Live Operations Board</h2>
-            <p className="text-sm text-muted-foreground">Real-time fleet monitoring and dispatch</p>
+            <h2 className="text-2xl font-semibold text-foreground" data-testid="page-title">Overview</h2>
+            <p className="text-sm text-muted-foreground">Real-time fleet monitoring, analytics, and efficiency tracking</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -227,6 +256,237 @@ export default function Dashboard() {
                   <p className="text-2xl font-semibold text-foreground" data-testid="stat-avg-eta">
                     {stats.avgEta}m
                   </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Customer Analytics Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Customer Satisfaction */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <i className="fas fa-star text-yellow-500 mr-2"></i>
+                Customer Satisfaction
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-foreground" data-testid="customer-rating">
+                  {mockAnalytics.customerSurveys.averageRating}
+                </div>
+                <div className="flex justify-center items-center space-x-1 mt-1">
+                  {[1,2,3,4,5].map(star => (
+                    <i key={star} className={`fas fa-star text-sm ${star <= Math.floor(mockAnalytics.customerSurveys.averageRating) ? 'text-yellow-500' : 'text-gray-300'}`}></i>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Based on {mockAnalytics.customerSurveys.totalResponses.toLocaleString()} reviews
+                </p>
+              </div>
+              <div className="space-y-2">
+                {Object.entries(mockAnalytics.customerSurveys.ratings).reverse().map(([rating, count]) => (
+                  <div key={rating} className="flex items-center space-x-2">
+                    <span className="text-xs w-6">{rating}★</span>
+                    <div className="flex-1 bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-yellow-500 h-2 rounded-full" 
+                        style={{width: `${(count / mockAnalytics.customerSurveys.totalResponses) * 100}%`}}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-muted-foreground w-8">{count}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Performance Metrics */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <i className="fas fa-tachometer-alt text-blue-500 mr-2"></i>
+                Performance Metrics
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Average Ride Time</span>
+                <span className="font-semibold text-foreground" data-testid="avg-ride-time">
+                  {mockAnalytics.performance.averageRideTime} min
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Average Wait Time</span>
+                <span className="font-semibold text-foreground" data-testid="avg-wait-time">
+                  {mockAnalytics.performance.averageWaitTime} min
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">On-Time Percentage</span>
+                <span className="font-semibold text-green-600" data-testid="on-time-percentage">
+                  {mockAnalytics.performance.onTimePercentage}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Cancellation Rate</span>
+                <span className="font-semibold text-red-600" data-testid="cancellation-rate">
+                  {mockAnalytics.performance.cancelationRate}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Driver Utilization</span>
+                <span className="font-semibold text-foreground" data-testid="driver-utilization">
+                  {mockAnalytics.performance.driverUtilization}%
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fleet Efficiency */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <i className="fas fa-leaf text-green-500 mr-2"></i>
+                Fleet Efficiency
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <div className="text-lg font-bold text-foreground" data-testid="total-kilometers">
+                    {mockAnalytics.efficiency.totalKilometers.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Total KM</div>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <div className="text-lg font-bold text-foreground" data-testid="total-miles">
+                    {mockAnalytics.efficiency.totalMiles.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Total Miles</div>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Fuel Consumed</span>
+                <span className="font-semibold text-foreground" data-testid="fuel-consumed">
+                  {mockAnalytics.efficiency.fuelConsumed.toLocaleString()}L
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Fuel Economy</span>
+                <span className="font-semibold text-green-600" data-testid="fuel-economy">
+                  {mockAnalytics.efficiency.avgFuelEconomy} km/L
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">CO₂ Emissions</span>
+                <span className="font-semibold text-orange-600" data-testid="co2-emissions">
+                  {mockAnalytics.efficiency.co2Emissions.toLocaleString()} kg
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Maintenance and Customer Feedback */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Maintenance Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <i className="fas fa-wrench text-orange-500 mr-2"></i>
+                Maintenance & Repairs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="text-2xl font-bold text-red-600" data-testid="maintenance-overdue">
+                    {mockAnalytics.efficiency.maintenanceOverdue}
+                  </div>
+                  <div className="text-xs text-red-600 font-medium">Overdue</div>
+                </div>
+                <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <div className="text-2xl font-bold text-yellow-600" data-testid="maintenance-scheduled">
+                    {mockAnalytics.efficiency.maintenanceScheduled}
+                  </div>
+                  <div className="text-xs text-yellow-600 font-medium">Scheduled</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="text-2xl font-bold text-green-600" data-testid="vehicles-operational">
+                    {displayDrivers.filter((d: any) => d.status !== 'offline').length}
+                  </div>
+                  <div className="text-xs text-green-600 font-medium">Operational</div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Total Maintenance Cost</span>
+                  <span className="font-semibold text-foreground" data-testid="maintenance-cost">
+                    AED {mockAnalytics.efficiency.totalMaintenanceCost.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Revenue per KM</span>
+                  <span className="font-semibold text-green-600" data-testid="revenue-per-km">
+                    AED {mockAnalytics.performance.revenuePerKm}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Customer Feedback Trends */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <i className="fas fa-comments text-purple-500 mr-2"></i>
+                Customer Feedback
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600" data-testid="satisfaction-score">
+                    {mockAnalytics.customerSurveys.satisfaction}%
+                  </div>
+                  <div className="text-xs text-purple-600 font-medium">Satisfaction Score</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600" data-testid="weekly-rating">
+                    {mockAnalytics.customerSurveys.lastWeekRating}
+                  </div>
+                  <div className="text-xs text-blue-600 font-medium">This Week's Rating</div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-foreground">Recent Customer Comments:</div>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  <div className="p-2 bg-muted/50 rounded text-xs">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex">
+                        {[1,2,3,4,5].map(star => (
+                          <i key={star} className="fas fa-star text-yellow-500 text-xs"></i>
+                        ))}
+                      </div>
+                      <span className="text-muted-foreground">Sarah M.</span>
+                    </div>
+                    <p className="text-foreground">"Excellent service, driver was very professional and punctual."</p>
+                  </div>
+                  <div className="p-2 bg-muted/50 rounded text-xs">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex">
+                        {[1,2,3,4].map(star => (
+                          <i key={star} className="fas fa-star text-yellow-500 text-xs"></i>
+                        ))}
+                        <i className="far fa-star text-gray-300 text-xs"></i>
+                      </div>
+                      <span className="text-muted-foreground">Ahmed K.</span>
+                    </div>
+                    <p className="text-foreground">"Good ride, clean vehicle. Could improve pickup time."</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
