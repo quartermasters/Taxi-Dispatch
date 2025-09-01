@@ -543,6 +543,7 @@ export default function Dashboard() {
             <CardContent className="p-0">
               <LiveMap 
                 className="h-96" 
+                activeFilter={activeFilter}
                 drivers={displayDrivers.map((d: any) => ({
                   id: d.id,
                   lat: d.lat,

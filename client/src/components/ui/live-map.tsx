@@ -25,9 +25,10 @@ interface LiveMapProps {
   drivers?: Array<{ id: string; lat: number; lng: number; status: string; name?: string }>;
   trips?: Array<{ id: string; pickupLat: number; pickupLng: number; status: string }>;
   showLegend?: boolean;
+  activeFilter?: 'drivers' | 'trips' | 'zones';
 }
 
-export function LiveMap({ className, drivers = [], trips = [], showLegend = true }: LiveMapProps) {
+export function LiveMap({ className, drivers = [], trips = [], showLegend = true, activeFilter = 'drivers' }: LiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GoogleMap | null>(null);
   const markersRef = useRef<GoogleMarker[]>([]);
@@ -209,19 +210,21 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
 
   // Function to generate random movement within Dubai bounds
   const generateRandomMovement = (currentLat: number, currentLng: number, status: string) => {
-    // Different movement patterns based on vehicle status
+    // Different movement patterns based on whether we're tracking drivers or vehicles
+    const isDriverView = activeFilter === 'drivers';
+    
     const movements = {
-      idle: 0.002, // ~200m - slow patrol movement
-      busy: 0.008, // ~800m - faster trip movement
-      offline: 0.001 // ~100m - minimal movement
+      idle: isDriverView ? 0.001 : 0.002, // Drivers move less when idle
+      busy: isDriverView ? 0.004 : 0.008, // Drivers move moderately when busy, vehicles move faster
+      offline: 0.0005 // Minimal movement when offline
     };
     
     const maxMovement = movements[status as keyof typeof movements] || movements.idle;
     
-    // For busy vehicles, create more directional movement (simulating following roads)
+    // For busy status, create more directional movement (simulating following roads/routes)
     if (status === 'busy') {
       const direction = Math.random() * 2 * Math.PI;
-      const distance = 0.003 + Math.random() * 0.005; // 300-800m
+      const distance = isDriverView ? 0.002 + Math.random() * 0.003 : 0.003 + Math.random() * 0.005;
       const deltaLat = Math.cos(direction) * distance;
       const deltaLng = Math.sin(direction) * distance;
       
@@ -230,7 +233,7 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
       
       return { lat: newLat, lng: newLng };
     } else {
-      // For idle vehicles, smaller random movements
+      // For idle status, smaller random movements
       const deltaLat = (Math.random() - 0.5) * maxMovement;
       const deltaLng = (Math.random() - 0.5) * maxMovement;
       
@@ -306,7 +309,7 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
           position: { lat: driver.lat, lng: driver.lng },
           map: mapInstanceRef.current,
           title: driver.name || `Driver ${driver.id}`,
-          icon: createVehicleIcon(driver.status),
+          icon: activeFilter === 'drivers' ? createDriverIcon(driver.status, driver.name) : createVehicleIcon(driver.status),
           zIndex: driver.status === 'busy' ? 1000 : 500
         }) as GoogleMarker;
 
@@ -442,49 +445,88 @@ export function LiveMap({ className, drivers = [], trips = [], showLegend = true
         <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-xl border border-gray-200" data-testid="map-legend">
           <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
             <i className="fas fa-map-marked-alt mr-2 text-primary"></i>
-            Live Fleet Status
+            {activeFilter === 'drivers' ? 'Live Driver Locations' : 'Live Fleet Status'}
           </h4>
           <div className="space-y-2">
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 relative">
-                <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
-                  <rect x="2" y="8" width="20" height="8" rx="4" fill="#10b981" stroke="#ffffff" strokeWidth="1"/>
-                  <circle cx="6" cy="16" r="2" fill="#2d3748"/>
-                  <circle cx="18" cy="16" r="2" fill="#2d3748"/>
-                </svg>
+            {activeFilter === 'drivers' ? (
+              <>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 relative">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" fill="#dcfce7" stroke="#10b981" strokeWidth="2"/>
+                      <circle cx="12" cy="8" r="3" fill="#10b981"/>
+                      <path d="M6 18 Q6 14 12 14 Q18 14 18 18 L6 18" fill="#10b981"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Available Drivers</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 relative">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" fill="#dbeafe" stroke="#3b82f6" strokeWidth="2"/>
+                      <circle cx="12" cy="8" r="3" fill="#3b82f6"/>
+                      <path d="M6 18 Q6 14 12 14 Q18 14 18 18 L6 18" fill="#3b82f6"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Drivers on Trip</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 relative">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" fill="#f3f4f6" stroke="#6b7280" strokeWidth="2"/>
+                      <circle cx="12" cy="8" r="3" fill="#6b7280"/>
+                      <path d="M6 18 Q6 14 12 14 Q18 14 18 18 L6 18" fill="#6b7280"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Offline Drivers</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 relative">
+                    <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
+                      <rect x="2" y="8" width="20" height="8" rx="4" fill="#10b981" stroke="#ffffff" strokeWidth="1"/>
+                      <circle cx="6" cy="16" r="2" fill="#2d3748"/>
+                      <circle cx="18" cy="16" r="2" fill="#2d3748"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Available Vehicles</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 relative">
+                    <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
+                      <rect x="2" y="8" width="20" height="8" rx="4" fill="#3b82f6" stroke="#ffffff" strokeWidth="1"/>
+                      <circle cx="6" cy="16" r="2" fill="#2d3748"/>
+                      <circle cx="18" cy="16" r="2" fill="#2d3748"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Vehicles on Trip</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 relative">
+                    <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
+                      <rect x="2" y="8" width="20" height="8" rx="4" fill="#6b7280" stroke="#ffffff" strokeWidth="1"/>
+                      <circle cx="6" cy="16" r="2" fill="#2d3748"/>
+                      <circle cx="18" cy="16" r="2" fill="#2d3748"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-gray-700">Offline Vehicles</span>
+                </div>
+              </>
+            )}
+            {activeFilter !== 'drivers' && (
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 relative">
+                  <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
+                    <path d="M12 2 C8 2 5 5 5 9 C5 13 12 22 12 22 S19 13 19 9 C19 5 16 2 12 2 Z" 
+                          fill="#f59e0b" stroke="#ffffff" strokeWidth="1"/>
+                    <circle cx="12" cy="9" r="3" fill="#ffffff"/>
+                  </svg>
+                </div>
+                <span className="text-xs font-medium text-gray-700">Pickup Points</span>
               </div>
-              <span className="text-xs font-medium text-gray-700">Available Vehicles</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 relative">
-                <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
-                  <rect x="2" y="8" width="20" height="8" rx="4" fill="#3b82f6" stroke="#ffffff" strokeWidth="1"/>
-                  <circle cx="6" cy="16" r="2" fill="#2d3748"/>
-                  <circle cx="18" cy="16" r="2" fill="#2d3748"/>
-                </svg>
-              </div>
-              <span className="text-xs font-medium text-gray-700">On Trip</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 relative">
-                <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
-                  <rect x="2" y="8" width="20" height="8" rx="4" fill="#6b7280" stroke="#ffffff" strokeWidth="1"/>
-                  <circle cx="6" cy="16" r="2" fill="#2d3748"/>
-                  <circle cx="18" cy="16" r="2" fill="#2d3748"/>
-                </svg>
-              </div>
-              <span className="text-xs font-medium text-gray-700">Offline</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-6 h-6 relative">
-                <svg width="24" height="24" viewBox="0 0 24 24" className="transform scale-75">
-                  <path d="M12 2 C8 2 5 5 5 9 C5 13 12 22 12 22 S19 13 19 9 C19 5 16 2 12 2 Z" 
-                        fill="#f59e0b" stroke="#ffffff" strokeWidth="1"/>
-                  <circle cx="12" cy="9" r="3" fill="#ffffff"/>
-                </svg>
-              </div>
-              <span className="text-xs font-medium text-gray-700">Pickup Points</span>
-            </div>
+            )}
           </div>
           <div className="mt-3 pt-3 border-t border-gray-200">
             <div className="flex items-center justify-between text-xs text-gray-500">
