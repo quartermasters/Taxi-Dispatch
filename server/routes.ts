@@ -357,8 +357,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get('/api/admin/trips', requireAuth, requireRole('admin'), async (req, res) => {
     try {
-      const trips = await storage.getActiveTrips();
-      res.json(trips);
+      // Get mock trip data for frontend display
+      const mockTrips = [
+        {
+          id: 'trip-001',
+          passengerId: 'pass-ahmed-r',
+          driverId: 'driver-ali',
+          status: 'completed',
+          pickupLat: 25.2048,
+          pickupLng: 55.2708,
+          dropoffLat: 25.2285,
+          dropoffLng: 55.3573,
+          pickupAddress: 'Dubai Mall',
+          dropoffAddress: 'Dubai International Airport',
+          fareQuote: 4500,
+          distanceKm: 25.8,
+          estimatedDuration: 35,
+          actualDuration: 32,
+          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 32 * 60 * 1000),
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Excellent service!'
+        },
+        {
+          id: 'trip-002',
+          passengerId: 'pass-sarah-m',
+          driverId: 'driver-omar',
+          status: 'completed',
+          pickupLat: 25.1972,
+          pickupLng: 55.2744,
+          dropoffLat: 25.0657,
+          dropoffLng: 55.1713,
+          pickupAddress: 'Burj Khalifa',
+          dropoffAddress: 'Ibn Battuta Mall',
+          fareQuote: 3200,
+          distanceKm: 18.5,
+          estimatedDuration: 28,
+          actualDuration: 25,
+          createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 6 * 60 * 60 * 1000 + 25 * 60 * 1000),
+          paymentMethod: 'cash',
+          paymentStatus: 'completed',
+          rating: 4,
+          feedback: 'Good driver, smooth ride'
+        },
+        {
+          id: 'trip-003',
+          passengerId: 'pass-fatima-z',
+          driverId: 'driver-ali',
+          status: 'completed',
+          pickupLat: 25.0772,
+          pickupLng: 55.3092,
+          dropoffLat: 25.1144,
+          dropoffLng: 55.1965,
+          pickupAddress: 'Jumeirah Beach',
+          dropoffAddress: 'Mall of the Emirates',
+          fareQuote: 5100,
+          distanceKm: 28.2,
+          estimatedDuration: 32,
+          actualDuration: 35,
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 4 * 60 * 60 * 1000 + 35 * 60 * 1000),
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Perfect timing and very professional'
+        },
+        {
+          id: 'trip-004',
+          passengerId: 'pass-david-c',
+          driverId: 'driver-omar',
+          status: 'cancelled',
+          pickupLat: 25.2582,
+          pickupLng: 55.3644,
+          dropoffLat: 25.1144,
+          dropoffLng: 55.1965,
+          pickupAddress: 'Gold Souk, Deira',
+          dropoffAddress: 'Mall of the Emirates',
+          fareQuote: 2800,
+          distanceKm: 21.3,
+          estimatedDuration: 28,
+          actualDuration: null,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          completedAt: null,
+          paymentMethod: 'card',
+          paymentStatus: 'refunded',
+          rating: null,
+          feedback: null
+        },
+        {
+          id: 'trip-005',
+          passengerId: 'pass-lisa-t',
+          driverId: 'driver-youssef',
+          status: 'in_progress',
+          pickupLat: 25.0657,
+          pickupLng: 55.1713,
+          dropoffLat: 25.2285,
+          dropoffLng: 55.3573,
+          pickupAddress: 'Ibn Battuta Mall',
+          dropoffAddress: 'Dubai International Airport',
+          fareQuote: 7200,
+          distanceKm: 32.1,
+          estimatedDuration: 40,
+          actualDuration: null,
+          createdAt: new Date(Date.now() - 25 * 60 * 1000),
+          completedAt: null,
+          paymentMethod: 'card',
+          paymentStatus: 'pending',
+          rating: null,
+          feedback: null
+        },
+        {
+          id: 'trip-006',
+          passengerId: 'pass-mohammed-z',
+          driverId: 'driver-ali',
+          status: 'completed',
+          pickupLat: 25.2631,
+          pickupLng: 55.3095,
+          dropoffLat: 25.2048,
+          dropoffLng: 55.2708,
+          pickupAddress: 'Business Bay',
+          dropoffAddress: 'Dubai Mall',
+          fareQuote: 3600,
+          distanceKm: 12.4,
+          estimatedDuration: 18,
+          actualDuration: 20,
+          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 5 * 60 * 1000),
+          completedAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 25 * 60 * 1000),
+          paymentMethod: 'cash',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Very quick and efficient'
+        },
+        {
+          id: 'trip-007',
+          passengerId: 'pass-nina-p',
+          driverId: null,
+          status: 'pending',
+          pickupLat: 25.1144,
+          pickupLng: 55.1965,
+          dropoffLat: 25.2582,
+          dropoffLng: 55.3644,
+          pickupAddress: 'Mall of the Emirates',
+          dropoffAddress: 'Gold Souk, Deira',
+          fareQuote: 4100,
+          distanceKm: 21.3,
+          estimatedDuration: 28,
+          actualDuration: null,
+          createdAt: new Date(Date.now() - 1 * 60 * 1000),
+          completedAt: null,
+          paymentMethod: 'cash',
+          paymentStatus: 'pending',
+          rating: null,
+          feedback: null
+        },
+        {
+          id: 'trip-008',
+          passengerId: 'pass-robert-j',
+          driverId: 'driver-mariam',
+          status: 'completed',
+          pickupLat: 25.2285,
+          pickupLng: 55.3573,
+          dropoffLat: 25.0934,
+          dropoffLng: 55.1560,
+          pickupAddress: 'Dubai International Airport',
+          dropoffAddress: 'Atlantis The Palm',
+          fareQuote: 8500,
+          distanceKm: 35.6,
+          estimatedDuration: 45,
+          actualDuration: 38,
+          createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 12 * 60 * 60 * 1000 + 38 * 60 * 1000),
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Amazing service! Driver was very helpful with luggage.'
+        }
+      ];
+
+      // Filter by date range if provided
+      const { startDate, endDate } = req.query;
+      let filteredTrips = mockTrips;
+      
+      if (startDate && endDate) {
+        const start = new Date(startDate as string);
+        const end = new Date(endDate as string);
+        filteredTrips = mockTrips.filter(trip => {
+          const tripDate = new Date(trip.createdAt);
+          return tripDate >= start && tripDate <= end;
+        });
+      }
+
+      res.json(filteredTrips);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
@@ -390,89 +582,197 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/reports', requireAuth, requireRole('admin'), async (req, res) => {
     try {
-      const { startDate, endDate } = req.query;
+      const { startDate, endDate, format } = req.query;
       
       if (!startDate || !endDate) {
         return res.status(400).json({ message: 'Start and end dates required' });
       }
 
-      // Generate mock payment history based on the trip data from frontend
-      const mockPaymentHistory = [
+      // Get the trip data to generate comprehensive reports
+      const mockTrips = [
         {
-          id: 'pay_trip001',
-          tripId: 'trip-001',
-          provider: 'stripe',
-          amount: 4500,
-          refundAmount: 0,
-          status: 'succeeded',
-          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 19 * 60 * 1000).toISOString(),
+          id: 'trip-001',
+          passengerId: 'pass-ahmed-r',
+          driverId: 'driver-ali',
+          status: 'completed',
+          pickupLat: 25.2048,
+          pickupLng: 55.2708,
+          dropoffLat: 25.2285,
+          dropoffLng: 55.3573,
+          pickupAddress: 'Dubai Mall',
+          dropoffAddress: 'Dubai International Airport',
+          fareQuote: 4500,
+          distanceKm: 25.8,
+          estimatedDuration: 35,
+          actualDuration: 32,
+          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 32 * 60 * 1000),
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Excellent service!',
           passengerName: 'Ahmed Al-Rashid',
           driverName: 'Ali Hassan'
         },
         {
-          id: 'pay_trip002',
-          tripId: 'trip-002',
-          provider: 'cash',
-          amount: 3200,
-          refundAmount: 0,
-          status: 'succeeded',
-          createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000 + 15 * 60 * 1000).toISOString(),
+          id: 'trip-002',
+          passengerId: 'pass-sarah-m',
+          driverId: 'driver-omar',
+          status: 'completed',
+          pickupLat: 25.1972,
+          pickupLng: 55.2744,
+          dropoffLat: 25.0657,
+          dropoffLng: 55.1713,
+          pickupAddress: 'Burj Khalifa',
+          dropoffAddress: 'Ibn Battuta Mall',
+          fareQuote: 3200,
+          distanceKm: 18.5,
+          estimatedDuration: 28,
+          actualDuration: 25,
+          createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 6 * 60 * 60 * 1000 + 25 * 60 * 1000),
+          paymentMethod: 'cash',
+          paymentStatus: 'completed',
+          rating: 4,
+          feedback: 'Good driver, smooth ride',
           passengerName: 'Sarah Mitchell',
           driverName: 'Omar Abdullah'
         },
         {
-          id: 'pay_trip003',
-          tripId: 'trip-003',
-          provider: 'stripe',
-          amount: 5100,
-          refundAmount: 0,
-          status: 'succeeded',
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000 + 22 * 60 * 1000).toISOString(),
+          id: 'trip-003',
+          passengerId: 'pass-fatima-z',
+          driverId: 'driver-ali',
+          status: 'completed',
+          pickupLat: 25.0772,
+          pickupLng: 55.3092,
+          dropoffLat: 25.1144,
+          dropoffLng: 55.1965,
+          pickupAddress: 'Jumeirah Beach',
+          dropoffAddress: 'Mall of the Emirates',
+          fareQuote: 5100,
+          distanceKm: 28.2,
+          estimatedDuration: 32,
+          actualDuration: 35,
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 4 * 60 * 60 * 1000 + 35 * 60 * 1000),
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Perfect timing and very professional',
           passengerName: 'Fatima Al-Zahra',
           driverName: 'Ali Hassan'
         },
         {
-          id: 'pay_trip004',
-          tripId: 'trip-004',
-          provider: 'card',
-          amount: 2800,
-          refundAmount: 2800,
-          status: 'refunded',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          id: 'trip-004',
+          passengerId: 'pass-david-c',
+          driverId: 'driver-omar',
+          status: 'cancelled',
+          pickupLat: 25.2582,
+          pickupLng: 55.3644,
+          dropoffLat: 25.1144,
+          dropoffLng: 55.1965,
+          pickupAddress: 'Gold Souk, Deira',
+          dropoffAddress: 'Mall of the Emirates',
+          fareQuote: 2800,
+          distanceKm: 21.3,
+          estimatedDuration: 28,
+          actualDuration: null,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          completedAt: null,
+          paymentMethod: 'card',
+          paymentStatus: 'refunded',
+          rating: null,
+          feedback: null,
           passengerName: 'David Chen',
           driverName: 'Omar Abdullah'
         },
         {
-          id: 'pay_trip006',
-          tripId: 'trip-006',
-          provider: 'cash',
-          amount: 3600,
-          refundAmount: 0,
-          status: 'succeeded',
-          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 20 * 60 * 1000).toISOString(),
+          id: 'trip-006',
+          passengerId: 'pass-mohammed-z',
+          driverId: 'driver-ali',
+          status: 'completed',
+          pickupLat: 25.2631,
+          pickupLng: 55.3095,
+          dropoffLat: 25.2048,
+          dropoffLng: 55.2708,
+          pickupAddress: 'Business Bay',
+          dropoffAddress: 'Dubai Mall',
+          fareQuote: 3600,
+          distanceKm: 12.4,
+          estimatedDuration: 18,
+          actualDuration: 20,
+          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 5 * 60 * 1000),
+          completedAt: new Date(Date.now() - 8 * 60 * 60 * 1000 + 25 * 60 * 1000),
+          paymentMethod: 'cash',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Very quick and efficient',
           passengerName: 'Mohammed Zayed',
           driverName: 'Ali Hassan'
         },
         {
-          id: 'pay_trip008',
-          tripId: 'trip-008',
-          provider: 'stripe',
-          amount: 8500,
-          refundAmount: 0,
-          status: 'succeeded',
-          createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000 + 48 * 60 * 1000).toISOString(),
+          id: 'trip-008',
+          passengerId: 'pass-robert-j',
+          driverId: 'driver-mariam',
+          status: 'completed',
+          pickupLat: 25.2285,
+          pickupLng: 55.3573,
+          dropoffLat: 25.0934,
+          dropoffLng: 55.1560,
+          pickupAddress: 'Dubai International Airport',
+          dropoffAddress: 'Atlantis The Palm',
+          fareQuote: 8500,
+          distanceKm: 35.6,
+          estimatedDuration: 45,
+          actualDuration: 38,
+          createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+          completedAt: new Date(Date.now() - 12 * 60 * 60 * 1000 + 38 * 60 * 1000),
+          paymentMethod: 'card',
+          paymentStatus: 'completed',
+          rating: 5,
+          feedback: 'Amazing service! Driver was very helpful with luggage.',
           passengerName: 'Robert Johnson',
           driverName: 'Mariam Al-Qassimi'
         }
       ];
 
-      // Filter payment history by date range
-      const filteredPayments = mockPaymentHistory.filter(payment => {
-        const paymentDate = new Date(payment.createdAt);
-        return paymentDate >= new Date(startDate as string) && paymentDate <= new Date(endDate as string);
+      // Filter trips by date range
+      const filteredTrips = mockTrips.filter(trip => {
+        const tripDate = new Date(trip.createdAt);
+        return tripDate >= new Date(startDate as string) && tripDate <= new Date(endDate as string);
       });
 
-      res.json(filteredPayments);
+      // Return CSV format for export
+      if (format === 'csv') {
+        const csvHeaders = 'Trip ID,Passenger,Driver,Status,Pickup,Dropoff,Distance (km),Fare (AED),Payment Method,Rating,Created At,Completed At\n';
+        const csvRows = filteredTrips.map(trip => {
+          const fare = (trip.fareQuote / 100).toFixed(2);
+          const createdAt = new Date(trip.createdAt).toLocaleString();
+          const completedAt = trip.completedAt ? new Date(trip.completedAt).toLocaleString() : 'N/A';
+          
+          return `${trip.id},${trip.passengerName},${trip.driverName || 'N/A'},${trip.status},"${trip.pickupAddress}","${trip.dropoffAddress}",${trip.distanceKm},${fare},${trip.paymentMethod},${trip.rating || 'N/A'},${createdAt},${completedAt}`;
+        }).join('\n');
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="trips-report-${startDate}-to-${endDate}.csv"`);
+        res.send(csvHeaders + csvRows);
+        return;
+      }
+
+      // Return JSON format for frontend display (includes payment data)
+      const mockPaymentHistory = filteredTrips.map(trip => ({
+        id: `pay_${trip.id}`,
+        tripId: trip.id,
+        provider: trip.paymentMethod === 'cash' ? 'cash' : 'stripe',
+        amount: trip.fareQuote,
+        refundAmount: trip.paymentStatus === 'refunded' ? trip.fareQuote : 0,
+        status: trip.paymentStatus === 'completed' ? 'succeeded' : trip.paymentStatus,
+        createdAt: trip.completedAt || trip.createdAt,
+        passengerName: trip.passengerName,
+        driverName: trip.driverName
+      }));
+
+      res.json(mockPaymentHistory);
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
